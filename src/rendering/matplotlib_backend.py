@@ -2,10 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
 
-from transforms.format import prune_points_and_reindex
-from search.comparison import find_equal_subarrays
+from src.transforms.format import prune_points_and_reindex
+from src.search.comparison import find_equal_subarrays
 
-def represent_diagram_as_png (points, connection, symmetry_num, colors, linestyles, show_index = True, directory = ""):
+def represent_diagram_as_png (points, connection, symmetry_num, colors, linestyles, show_index = True, directory = "", figsize_=(4,2)):
 
     #Failproof for empty connections
     if (np.all(connection == 0)):
@@ -18,7 +18,7 @@ def represent_diagram_as_png (points, connection, symmetry_num, colors, linestyl
     #connection = trim_zeros_3D(connection, axis=1)
 
     #Initialize figure
-    fig=plt.figure(figsize=(5,3)) 
+    fig=plt.figure(figsize=figsize_) 
     ax=fig.add_subplot(111)
     ax.axis('off')
 
@@ -54,7 +54,7 @@ def represent_diagram_as_png (points, connection, symmetry_num, colors, linestyl
         for i in range(len(points)):
             ax.text(points[i, 0], points[i, 1], str(i+1), fontsize=12, color="black", ha="right", va="top")
     if symmetry_num !=0:
-        ax.text(0.5, 0.5, f"N = {symmetry_num}", fontsize=12, color="black", ha="center", va="center")
+        ax.text(-1, 0.5, f"N = {symmetry_num}", fontsize=12, color="black", ha="left", va="top")
     if directory != "":
         plt.savefig(directory, bbox_inches='tight')
         plt.close() #Added to not show in the notebook 

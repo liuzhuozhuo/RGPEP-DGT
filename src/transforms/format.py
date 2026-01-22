@@ -101,3 +101,21 @@ def trim_zeros_3D(array, axis=None):
         raise ValueError("Invalid axis. Axis must be 0, 1, 2, or None.")
     
     return trimmed_array
+
+def combine_connections(max_len = 0,*connections):
+    """ 
+    Combine multiple connections into a single array with the same length by padding with zeros.
+    Args:
+        connections (list): list of connections to combine
+    Returns:
+        final_connection (np.array): combined connection of dimension (len(connections), max_len, 2)
+    """
+    if max_len == 0:
+        max_len = max([len(connection) for connection in connections])
+    final_connection = np.zeros((len(connections), max_len, 2), dtype=int)
+    for i in range(len(connections)):
+        if len(connections[i]) < max_len:
+            final_connection[i] = np.append(connections[i], np.zeros((max_len - len(connections[i]), 2), dtype=int), axis=0)
+        else:
+            final_connection[i] = connections[i]
+    return final_connection
