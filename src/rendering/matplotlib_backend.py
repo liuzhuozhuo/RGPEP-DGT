@@ -40,6 +40,7 @@ def represent_diagram_as_png (points, connection, symmetry_num, colors, linestyl
                     else:
                         ax.plot([points[conn[i, 0]-1, 0], points[conn[i, 1]-1, 0]], [points[conn[i, 0]-1, 1], points[conn[i, 1]-1, 1]], color=colors[j])
             else:
+                """
                 if np.isin(i, loops):
                     middle_point = (points[conn[i, 0]-1] + points[conn[i, 1]-1]) / 2
                     circle = plt.Circle((middle_point[0], middle_point[1]), np.linalg.norm(points[conn[i, 0]-1]-middle_point), color=colors[j], fill=False, linestyle=linestyles[j])
@@ -47,7 +48,8 @@ def represent_diagram_as_png (points, connection, symmetry_num, colors, linestyl
                 elif conn[i, 0] == conn[i, 1] and conn[i ,0] != 0:
                     ax.scatter(points[conn[i, 0]-1, 0], points[conn[i, 0]-1, 1], color = colors[j], s = 50, zorder = 10)
                 else:
-                    ax.plot([points[conn[i, 0]-1, 0], points[conn[i, 1]-1, 0]], [points[conn[i, 0]-1, 1], points[conn[i, 1]-1, 1]], color=colors[j], linestyle=linestyles[j])
+                """
+                ax.plot([points[conn[i, 0]-1, 0], points[conn[i, 1]-1, 0]], [points[conn[i, 0]-1, 1], points[conn[i, 1]-1, 1]], color=colors[j], linestyle=linestyles[j])
         j+=1
     ax.axis('equal')
     if show_index:
@@ -58,5 +60,3 @@ def represent_diagram_as_png (points, connection, symmetry_num, colors, linestyl
     if directory != "":
         plt.savefig(directory, bbox_inches='tight')
         plt.close() #Added to not show in the notebook 
-
-
