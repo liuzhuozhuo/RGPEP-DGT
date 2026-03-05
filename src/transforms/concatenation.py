@@ -117,7 +117,7 @@ def make_connection (points1, connections1, points2, connections2, offset = 0):
         n_connec += product
 
     #Use a dummy array to store all possible combinations of connections for each type of particle between the two diagrams
-    dummy_combinations = np.zeros((sum(n_connections), n_types,  max(max_connections), 2), dtype=int)
+    dummy_combinations = np.zeros((sum(n_connections)+1, n_types,  max(max_connections), 2), dtype=int)
     n = 0
     for i in range(n_types):
         dummy_var = how_connected(max_connections[i], n_connections[i], n1[i], n2[i])
@@ -162,9 +162,9 @@ def make_connection (points1, connections1, points2, connections2, offset = 0):
         for l in range(i+1, n_types):   
             leng += n_connections[i]*n_connections[l]
         for n in range(n_start, leng+n_start):
-            combinations[n, i] = dummy_combinations[n_prime-1, i]
+            combinations[n, i] = dummy_combinations[n_prime, i]
             for j in range(i+1, n_types):
-                combinations[n, j] = dummy_combinations[n-n_start+n_connections[i]-1, j]
+                combinations[n, j] = dummy_combinations[n-n_start+n_connections[i], j]
         n_prime += 1    
     #Create the connections array that will store the connections between the two diagrams.
     connections = np.zeros((n_connec, n_types, len(connections1[0]) + len(connections2[0]) + max(max_connections), 2), dtype=int)
@@ -190,7 +190,6 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
     #Similar to the one type of particle case, we need to first approximate the number of new diagrams that will produce.
     curr_order = len(points)
     n_types = len(connections[0][0])
-    print(n_types)
     max_points = np.zeros((n_types, 2), dtype=int)
 
     n1 = np.zeros(n_types, dtype=int)

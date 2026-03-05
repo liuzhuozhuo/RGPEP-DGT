@@ -5,8 +5,6 @@ def unique_values(array):
     unique_values = unique[counts == 1]
     return unique_values
 
-
-
 def find_equal_subarrays(array):
     """"
     Find the positions of duplicate subarrays in a 2D array. Used mainly for detecting duplicate connections,
