@@ -497,7 +497,6 @@ connections_2nd_12_4p = np.array([[3, 6]])
 connections_2nd_12_4a = np.array([[1, 2], [2, 5], [3, 4]])
 can_connections_2nd[54] = combine_connections(max_conn, connections_2nd_12_4g, connections_2nd_12_4i, connections_2nd_12_4p, connections_2nd_12_4a)
 
-
 can_number_2nd = np.ones((n_2nd, 1), dtype=int)
 
 can_points = [can_points_1st, can_points_2nd]

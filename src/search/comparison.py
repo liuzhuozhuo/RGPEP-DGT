@@ -19,6 +19,38 @@ def find_equal_subarrays(array):
     duplicate_positions = [np.where((sorted_subarrays == unique_subarrays[i]).all(axis=1))[0] for i in range(len(unique_subarrays)) if counts[i] > 1]
     return duplicate_positions
 
+def find_equal_subarrays_3D(array, padding_value=0):
+    """"
+    Find the positions of duplicate subarrays in a 3D array. Used mainly for detecting duplicate connections,
+    which indicate the presence of a 2-loop structure in the diagram.
+    Args:
+        array (np.array): 3D array to search for duplicates
+    Returns:
+        duplicate_positions (list): list of positions of duplicate
+    """
+    array = np.array(array)
+
+    all_rows = []
+    positions = []
+    for i, subarray in enumerate(array):
+        for j, row in enumerate(subarray):
+            if np.all(row == padding_value):
+                continue
+            all_rows.append(np.sort(row))
+            positions.append((i, j))
+
+    all_rows = np.array(all_rows)
+    unique_rows, indices, counts = np.unique(all_rows, axis=0, return_index=True, return_counts=True)
+
+    duplicate_positions = {}
+    for k in range(len(unique_rows)):
+        if counts[k] > 1:
+            matches = np.where((all_rows == unique_rows[k]).all(axis=1))[0]
+            key = tuple(unique_rows[k])  # e.g. (2, 3) as dict key
+            duplicate_positions[key] = [positions[m] for m in matches]
+
+    return duplicate_positions
+
 def diagram_signature(paths: np.ndarray) -> tuple:
     """
     paths: (K, M, 2)
