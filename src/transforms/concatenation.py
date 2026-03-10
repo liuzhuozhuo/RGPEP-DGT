@@ -117,7 +117,7 @@ def make_connection (points1, connections1, points2, connections2, offset = 0):
         n_connec += product
 
     #Use a dummy array to store all possible combinations of connections for each type of particle between the two diagrams
-    dummy_combinations = np.zeros((sum(n_connections)+1, n_types,  max(max_connections), 2), dtype=int)
+    dummy_combinations = np.zeros((sum(n_connections)*2, n_types,  max(max_connections), 2), dtype=int)
     n = 0
     for i in range(n_types):
         dummy_var = how_connected(max_connections[i], n_connections[i], n1[i], n2[i])
@@ -165,7 +165,8 @@ def make_connection (points1, connections1, points2, connections2, offset = 0):
             combinations[n, i] = dummy_combinations[n_prime, i]
             for j in range(i+1, n_types):
                 combinations[n, j] = dummy_combinations[n-n_start+n_connections[i], j]
-        n_prime += 1    
+        if leng > 0:
+            n_prime += 1    
     #Create the connections array that will store the connections between the two diagrams.
     connections = np.zeros((n_connec, n_types, len(connections1[0]) + len(connections2[0]) + max(max_connections), 2), dtype=int)
     connections[:n_connec,:n_types,:len(connections1[0])] = connections1
@@ -365,3 +366,73 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
             n += 1
     """
     return new_points, new_connections, new_count
+
+def equalize_x_spacing(points: np.ndarray, spacing: float = 1) -> np.ndarray:
+    """
+    Return a new (N×2) array where the x-coords have been remapped so that
+      - each unique original x is assigned to 0, spacing, 2*spacing, … in ascending order,
+      - any two points that had the same x stay tied,
+      - the y-coords are left unchanged.
+    
+    Parameters
+    ----------
+    points : np.ndarray of shape (N,2)
+        Your original (x,y) coordinates.
+    spacing : float, default=1.0
+        The distance between consecutive unique x-positions.
+    
+    Returns
+    -------
+    new_pts : np.ndarray of shape (N,2)
+        The transformed points.
+    """
+    # 1) find the sorted unique x-values
+    orig_x = points[:,0]
+    uniq = np.unique(orig_x)
+    
+    # 2) build a map: original x → new x
+    #    e.g. uniq = [1.2, 3.4, 7.9]  →  {1.2:0, 3.4:1*spacing, 7.9:2*spacing}
+    mapping = {x: i * spacing for i, x in enumerate(uniq)}
+    
+    # 3) apply it
+    new_x = np.vectorize(mapping.get)(orig_x)
+    new_pts = points.copy()
+    new_pts[:,0] = new_x
+    return new_pts
+
+
+def rearrange_in_out_points(points, connections):
+    in_out_points = in_out_connections(connections)
+    in_points = np.trim_zeros(in_out_points[:, 0].flatten())-1
+    out_points = np.trim_zeros(in_out_points[:, 1].flatten())-1
+    min_x_val = np.min(points[:, 0])
+    max_x_val = np.max(points[:, 0])
+    if len(out_points) > 1:
+        for i in range(len(out_points)):
+            if points[out_points[i], 0] == 0 and points[out_points[i], 1] == 0:
+                continue
+            elif points[out_points[i], 0] != min_x_val:
+                equal_y = False
+                for j in range(len(out_points)):
+                    if points[out_points[i], 1] == points[out_points[j], 1] and i != j:
+                        equal_y = True
+                        break
+                if equal_y:
+                    points[out_points[i]] = [min_x_val, np.max(points[:, 1]) + 1]
+                else:
+                    points[out_points[i], 0] = min_x_val
+    if len(in_points) > 1:
+        for i in range(len(in_points)):
+            if points[in_points[i], 0] == 0 and points[in_points[i], 1] == 0:
+                continue
+            elif points[in_points[i], 0] != max_x_val:
+                equal_y = False
+                for j in range(len(in_points)):
+                    if points[in_points[i], 1] == points[in_points[j], 1] and i != j:
+                        equal_y = True
+                        break
+                if equal_y:
+                    points[in_points[i]] = [max_x_val, np.max(points[:, 1]) + 1]
+                else:
+                    points[in_points[i], 0] = max_x_val
+    return points

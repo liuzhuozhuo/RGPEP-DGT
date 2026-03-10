@@ -60,7 +60,7 @@ def represent_diagram_as_png (points, connection, symmetry_num, colors, linestyl
         plt.savefig(directory, bbox_inches='tight')
         plt.close() #Added to not show in the notebook 
 
-def represent_diagram_as_png_feynman (points, connection, symmetry_num, colors, linestyles, directory = "", figsize_=(4,3)):
+def represent_diagram_as_png_feynman (points, connection, symmetry_num, colors, flavour_,linestyle_ = ["solid", "dotted", "solid", "solid"], directory = "", figsize_=(4,3), arrow_ = [False, False, True, True]):
 
     #Failproof for empty connections
     if (np.all(connection == 0)):
@@ -95,23 +95,23 @@ def represent_diagram_as_png_feynman (points, connection, symmetry_num, colors, 
             if tf_loop:
                 diagram.line(diagram.vertex(xy=(points[conn[i, 0]-1, 0], points[conn[i, 0]-1, 1]), markersize=4), 
                              diagram.vertex(xy=(points[conn[i, 1]-1, 0], points[conn[i, 1]-1, 1]), markersize=4)
-                             , flavour=linestyles[j], shape = "elliptic", ellipse_position=2*loop_index-1, 
-                             nloops = distance*5, xamp=0.1, yamp=0.12, ellipse_spread = 0.35, phase = 7,color = colors[j], linewidth = 0.5).scale(1)
+                             , flavour=flavour_[j], shape = "elliptic", ellipse_position=2*loop_index-1, 
+                             nloops = distance*5, xamp=0.1, yamp=0.12, ellipse_spread = 0.35, phase = 7,color = colors[j], linestyle = linestyle_[j], linewidth = 0.5).scale(1)
             elif conn[i, 0] == conn[i, 1] and conn[i ,0] != 0:
                 ax.scatter(points[conn[i, 0]-1, 0], points[conn[i, 0]-1, 1], color = colors[j], s = 50, zorder = 10, marker="*")
             else:
-                if linestyles[j] == "simple":
+                if flavour_[j] == "simple" and colors[j] in ["blue", "red"]:
                     if colors[j] == "blue":
                         direc = -1
                     else:
                         direc = 1
                     diagram.line(diagram.vertex(xy=(points[conn[i, 0]-1, 0], points[conn[i, 0]-1, 1]), markersize=4), 
                              diagram.vertex(xy=(points[conn[i, 1]-1, 0], points[conn[i, 1]-1, 1]), markersize=4)
-                             , flavour=linestyles[j], color =colors[j], linewidth = 0.7, arrow = True, arrow_param={"direction": direc, 'width':0.3, 'length': 0.3  }).scale(1)
+                             , flavour=flavour_[j], color =colors[j], linestyle = linestyle_[j], linewidth = 0.7, arrow = arrow_[j], arrow_param={"direction": direc, 'width':0.3, 'length': 0.3  }).scale(1)
                 else:
                     diagram.line(diagram.vertex(xy=(points[conn[i, 0]-1, 0], points[conn[i, 0]-1, 1]), markersize=4), 
                              diagram.vertex(xy=(points[conn[i, 1]-1, 0], points[conn[i, 1]-1, 1]), markersize=4)
-                             , flavour=linestyles[j], color =colors[j], nloops = distance*4, xamp=0.1, yamp=0.12, linewidth = 0.7).scale(1)
+                             , flavour=flavour_[j], color =colors[j], linestyle = linestyle_[j], nloops = distance*4, xamp=0.1, yamp=0.12, linewidth = 0.7).scale(1)
         j+=1
     ax.set_aspect("auto")
     plt.xlim(-1, np.max(points[:, 0]) + 1)
