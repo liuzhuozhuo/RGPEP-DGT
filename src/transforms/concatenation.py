@@ -117,7 +117,7 @@ def make_connection (points1, connections1, points2, connections2, offset = 0):
         n_connec += product
 
     #Use a dummy array to store all possible combinations of connections for each type of particle between the two diagrams
-    dummy_combinations = np.zeros((sum(n_connections)*2, n_types,  max(max_connections), 2), dtype=int)
+    dummy_combinations = np.zeros((int(sum(n_connections)*2), n_types,  max(max_connections), 2), dtype=int)
     n = 0
     for i in range(n_types):
         dummy_var = how_connected(max_connections[i], n_connections[i], n1[i], n2[i])
