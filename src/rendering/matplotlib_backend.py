@@ -5,6 +5,7 @@ import feynman as fyn
 
 from src.transforms.format import *
 from src.search.comparison import find_equal_subarrays, find_equal_subarrays_3D
+from src.transforms.concatenation import in_out_connections, rearrange_in_out_points, equalize_x_spacing, find_loops
 
 def represent_diagram_as_png (points, connection, symmetry_num, colors, linestyles, show_index = True, directory = "", figsize_=(4,2)):
 
@@ -93,10 +94,21 @@ def represent_diagram_as_png_feynman (points, connection, symmetry_num, colors, 
             distance = np.linalg.norm(points[conn[i, 0]-1] - points[conn[i, 1]-1])
             tf_loop, loop_index = is_loop([j, i], loops)
             if tf_loop:
-                diagram.line(diagram.vertex(xy=(points[conn[i, 0]-1, 0], points[conn[i, 0]-1, 1]), markersize=4), 
-                             diagram.vertex(xy=(points[conn[i, 1]-1, 0], points[conn[i, 1]-1, 1]), markersize=4)
-                             , flavour=flavour_[j], shape = "elliptic", ellipse_position=2*loop_index-1, 
-                             nloops = distance*5, xamp=0.1, yamp=0.12, ellipse_spread = 0.35, phase = 7,color = colors[j], linestyle = linestyle_[j], linewidth = 0.5).scale(1)
+                if flavour_[j] == "simple" and colors[j] in ["blue", "red"]:
+                    if colors[j] == "blue":
+                        direc = -1
+                    else:
+                        direc = 1
+                    diagram.line(diagram.vertex(xy=(points[conn[i, 0]-1, 0], points[conn[i, 0]-1, 1]), markersize=4), 
+                                diagram.vertex(xy=(points[conn[i, 1]-1, 0], points[conn[i, 1]-1, 1]), markersize=4)
+                                , flavour=flavour_[j], shape = "elliptic", ellipse_position=2*loop_index-1, 
+                                nloops = distance*5, xamp=0.1, yamp=0.12, ellipse_spread = 0.35, phase = 7,color = colors[j], linestyle = linestyle_[j], linewidth = 0.5,
+                                arrow = arrow_[j], arrow_param={"direction": direc, 'width':0.3, 'length': 0.3  }).scale(1)
+                else:
+                    diagram.line(diagram.vertex(xy=(points[conn[i, 0]-1, 0], points[conn[i, 0]-1, 1]), markersize=4), 
+                                diagram.vertex(xy=(points[conn[i, 1]-1, 0], points[conn[i, 1]-1, 1]), markersize=4)
+                                , flavour=flavour_[j], shape = "elliptic", ellipse_position=2*loop_index-1, 
+                                nloops = distance*5, xamp=0.1, yamp=0.12, ellipse_spread = 0.35, phase = 7,color = colors[j], linestyle = linestyle_[j], linewidth = 0.5).scale(1)
             elif conn[i, 0] == conn[i, 1] and conn[i ,0] != 0:
                 ax.scatter(points[conn[i, 0]-1, 0], points[conn[i, 0]-1, 1], color = colors[j], s = 50, zorder = 10, marker="*")
             else:
@@ -113,8 +125,27 @@ def represent_diagram_as_png_feynman (points, connection, symmetry_num, colors, 
                              diagram.vertex(xy=(points[conn[i, 1]-1, 0], points[conn[i, 1]-1, 1]), markersize=4)
                              , flavour=flavour_[j], color =colors[j], linestyle = linestyle_[j], nloops = distance*4, xamp=0.1, yamp=0.12, linewidth = 0.7).scale(1)
         j+=1
+    if symmetry_num !=0:
+        ax.text(-1, 0.5, f"N = {symmetry_num}", fontsize=12, color="black", ha="left", va="top")
+    
     ax.set_aspect("auto")
     plt.xlim(-1, np.max(points[:, 0]) + 1)
     plt.ylim(np.min(points[:, 1]) - 2, np.max(points[:, 1]) + 2)
     diagram.draw()
     plt.show()
+
+def represent_order_diagram(points, connection, symmetry_num, process, colors_=['black', 'black', 'blue', 'red'], flavour=['loopy','simple', 'simple', 'simple'], linestyle = ["solid", "dotted", "solid", "solid"], directory_ = "", figsize=(4,3), arrow = [False, False, True, True]):
+    for i in range(len(points)):
+        in_out_connections_ = in_out_connections(connection[i])
+        inp_g = len(np.trim_zeros(in_out_connections_[0, 0]))
+        out_g = len(np.trim_zeros(in_out_connections_[0, 1]))
+        inp = 0
+        out = 0
+        for j in range(1, len(connection[i])):
+            inp += len(np.trim_zeros(in_out_connections_[j, 0]))
+            out += len(np.trim_zeros(in_out_connections_[j, 1]))
+        if inp == 0 and out == 0 and inp_g == process[0] and out_g == process[1]:
+            rearrange_in_out_points(points[i], connection[i])
+            points[i]=equalize_x_spacing(points[i], 2)
+            find_loops(points[i], connection[i])
+            represent_diagram_as_png_feynman(points[i], connection[i], i, colors=colors_, flavour_=flavour, linestyle_=linestyle, arrow_=arrow, directory=directory_, figsize_=figsize)

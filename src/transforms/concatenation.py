@@ -436,3 +436,68 @@ def rearrange_in_out_points(points, connections):
                 else:
                     points[in_points[i], 0] = max_x_val
     return points
+
+from collections import defaultdict
+
+def find_loops (points, connections, min_loop_len=3):
+    edges = trim_zeros_2D(connections.reshape(-1, 2))
+    graph = defaultdict(set)
+    for u, v in edges:
+        graph[u].add(v)
+        graph[v].add(u)
+
+    cycles = set()
+
+    def normalize(cycle):
+        cycle = cycle[:-1] if cycle[0] == cycle[-1] else cycle
+        n = len(cycle)
+        rots = [tuple(cycle[i:] + cycle[:i]) for i in range(n)]
+        rev = cycle[::-1]
+        rots_rev = [tuple(rev[i:] + rev[:i]) for i in range(n)]
+        return min(rots + rots_rev)
+
+    def dfs(start, curr, path, parent):
+        for nbr in graph[curr]:
+            if nbr == parent:
+                continue
+            if nbr == start and len(path) >= min_loop_len:
+                cycles.add(normalize(path))
+            elif nbr not in path:
+                dfs(start, nbr, path + [nbr], curr)
+
+    for node in graph:
+        dfs(node, node, [node], None)
+
+    loops_ =  [list(c) for c in sorted(cycles)]
+    if len(loops_) == 0:
+        return
+    else:
+        max_len = max(len(l) for l in loops_)
+        loops = np.full((len(loops_), max_len), 1, dtype=int)
+        for i, l in enumerate(loops_):
+            loops[i, :len(l)] = l
+        loops = loops-1
+
+    def other_index_out_of_loop(edges, loop, node):
+        loop = set(loop)
+
+        for a, b in edges:
+            if a == node and b not in loop:
+                return b
+            if b == node and a not in loop:
+                return a
+
+        return None
+
+    for loop in loops:
+        loop = np.trim_zeros(loop)
+        y_vals = points[loop, 1]
+        if np.all(np.isclose(y_vals, y_vals[0])):
+            x_pos = points[loop, 0]
+            mid_vals = loop[(x_pos > x_pos.min()) & (x_pos < x_pos.max())]
+            for idx in mid_vals:
+                other_idx = other_index_out_of_loop(edges-1, loop, idx)
+                if other_idx is not None and points[idx, 1] != points[other_idx, 1]:
+                    points[idx, 1] = points[other_idx, 1]
+                else:
+                    points[idx, 1] += 1
