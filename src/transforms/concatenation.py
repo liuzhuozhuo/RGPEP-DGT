@@ -5,7 +5,7 @@ from src.transforms.format import trim_zeros_3D, trim_zeros_2D
 from src.search.comparison import unique_values
 from src.transforms.simplify import simplify_diagram
 
-from src.qcd.full_theory.canonical_diagrams import can_points, can_connections, can_count
+from src.can_diagrams.qcd.full_theory.canonical_diagrams import can_points, can_connections, can_count
 
 def in_out_connections (connections):
     max_len = max([len(path) for path in connections])
@@ -71,7 +71,7 @@ def how_connected(max_connections, n_connections, n_1, n_2):
     else:
         return combinations
     
-def make_connection (points1, connections1, points2, connections2, offset = 0):
+def make_connection (points1, connections1, points2, connections2, order, offset = 0):
     in_out_connections1 = in_out_connections(connections1)
     in_out_connections2 = in_out_connections(connections2)
 
@@ -117,7 +117,7 @@ def make_connection (points1, connections1, points2, connections2, offset = 0):
         n_connec += product
 
     #Use a dummy array to store all possible combinations of connections for each type of particle between the two diagrams
-    dummy_combinations = np.zeros((int(sum(n_connections)*2), n_types,  max(max_connections), 2), dtype=int)
+    dummy_combinations = np.zeros((int(sum(n_connections)*((order+1)/2)), n_types,  max(max_connections), 2), dtype=int)
     n = 0
     for i in range(n_types):
         dummy_var = how_connected(max_connections[i], n_connections[i], n1[i], n2[i])
@@ -238,7 +238,7 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
 
     for i in range(len(connections[0])):
         for j in range(len(connections[-1])):
-            dummy_points, dummy_connections = make_connection(trim_zeros_2D(points[-1][j]), trim_zeros_3D(connections[-1][j], axis = 1),trim_zeros_2D(points[0][i]), trim_zeros_3D(connections[0][i], axis=1), offset=offset)
+            dummy_points, dummy_connections = make_connection(trim_zeros_2D(points[-1][j]), trim_zeros_3D(connections[-1][j], axis = 1),trim_zeros_2D(points[0][i]), trim_zeros_3D(connections[0][i], axis=1), order=curr_order, offset=offset)
             for k in range(len(dummy_connections)):
                 if(curr_order+1  == max_order): 
                     in_out_path = in_out_connections(dummy_connections[k])
@@ -253,7 +253,7 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
                 new_count[n] = count[0][i] * count[-1][j]
                 n += 1
             if (curr_order-1 < len(can_connections)):
-                dummy_points, dummy_connections = make_connection(trim_zeros_2D(points[0][i]), trim_zeros_3D(connections[0][i], axis=1),trim_zeros_2D(points[-1][j]), trim_zeros_3D(connections[-1][j], axis = 1), offset=offset)
+                dummy_points, dummy_connections = make_connection(trim_zeros_2D(points[0][i]), trim_zeros_3D(connections[0][i], axis=1),trim_zeros_2D(points[-1][j]), trim_zeros_3D(connections[-1][j], axis = 1), order=curr_order, offset=offset)
                 for k in range(len(dummy_connections)):
                     if(curr_order+1  == max_order): 
                         in_out_path = in_out_connections(dummy_connections[k])
@@ -272,7 +272,7 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
             if (i+1 + j) == curr_order:
                 for k in range(len(can_connections[i])):
                     for l in range(len(connections[j])):
-                        dummy_points, dummy_connections = make_connection(trim_zeros_2D(can_points[i][k]), trim_zeros_3D(can_connections[i][k], axis=1), trim_zeros_2D(points[j][l]), trim_zeros_3D(connections[j][l], axis = 1), offset=offset)
+                        dummy_points, dummy_connections = make_connection(trim_zeros_2D(can_points[i][k]), trim_zeros_3D(can_connections[i][k], axis=1), trim_zeros_2D(points[j][l]), trim_zeros_3D(connections[j][l], axis = 1), order=curr_order, offset=offset)
                         for m in range(len(dummy_connections)):
                             if(curr_order+1  == max_order): 
                                 in_out_path = in_out_connections(dummy_connections[m])
@@ -288,7 +288,7 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
                             n += 1
                 for k in range(len(can_connections[i])):
                     for l in range(len(connections[j])):
-                        dummy_points, dummy_connections = make_connection(trim_zeros_2D(points[j][l]), trim_zeros_3D(connections[j][l], axis=1), trim_zeros_2D(can_points[i][k]), trim_zeros_3D(can_connections[i][k], axis = 1), offset=offset)
+                        dummy_points, dummy_connections = make_connection(trim_zeros_2D(points[j][l]), trim_zeros_3D(connections[j][l], axis=1), trim_zeros_2D(can_points[i][k]), trim_zeros_3D(can_connections[i][k], axis = 1), order=curr_order, offset=offset)
                         for m in range(len(dummy_connections)):
                             if(curr_order+1  == max_order): 
                                 in_out_path = in_out_connections(dummy_connections[m])
@@ -308,7 +308,7 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
             if (i+2+ j +1) == curr_order:
                 for k in range(len(counter_points[i])):
                     for l in range(len(connections[j])):
-                        dummy_points, dummy_connections = make_connection(trim_zeros_2D(np.array(counter_points[i][k])), trim_zeros_3D(np.array([counter_connections[i][k],np.zeros_like(counter_connections[i][k])]), axis=1), trim_zeros_2D(points[j][l]), trim_zeros_3D(connections[j][l], axis = 1), offset=offset)
+                        dummy_points, dummy_connections = make_connection(trim_zeros_2D(np.array(counter_points[i][k])), trim_zeros_3D(np.array([counter_connections[i][k],np.zeros_like(counter_connections[i][k])]), axis=1), trim_zeros_2D(points[j][l]), trim_zeros_3D(connections[j][l], axis = 1), order=curr_order, offset=offset)
                         for m in range(len(dummy_connections)):
                             if(curr_order+1  == max_order): 
                                 in_out_path = in_out_connections(dummy_connections[m])
@@ -324,7 +324,7 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
                             n += 1
                 for k in range(len(counter_points[i])):
                     for l in range(len(connections[j])):
-                        dummy_points, dummy_connections = make_connection(trim_zeros_2D(points[j][l]), trim_zeros_3D(connections[j][l], axis=1), trim_zeros_2D(np.array(counter_points[i][k])), trim_zeros_3D(np.array([counter_connections[i][k],np.zeros_like(counter_connections[i][k])]), axis=1), offset=offset)
+                        dummy_points, dummy_connections = make_connection(trim_zeros_2D(points[j][l]), trim_zeros_3D(connections[j][l], axis=1), trim_zeros_2D(np.array(counter_points[i][k])), trim_zeros_3D(np.array([counter_connections[i][k],np.zeros_like(counter_connections[i][k])]), axis=1), order=curr_order, offset=offset)
                         for m in range(len(dummy_connections)):
                             if(curr_order+1  == max_order): 
                                 in_out_path = in_out_connections(dummy_connections[m])
