@@ -5,8 +5,6 @@ from src.transforms.format import trim_zeros_3D, trim_zeros_2D
 from src.search.comparison import unique_values
 from src.transforms.simplify import simplify_diagram
 
-from src.can_diagrams.qcd.full_theory.canonical_diagrams import can_points, can_connections, can_count
-
 def in_out_connections (connections):
     max_len = max([len(path) for path in connections])
     #len(connections) is the number of type of particles
@@ -182,11 +180,27 @@ def make_connection (points1, connections1, points2, connections2, order, offset
 
     return points, connections
 
-def combine_diagrams_order (points, connections, count, typeofproc, max_order, offset = 0):
+
+def combine_diagrams_order (points, connections, count, typeofproc, max_order, offset = 0, theory = "qcd"):
     """
     Combine all the diagrams that would contribute to a give order, and type of interaction. If the order that is calculating is 
     the max_order intended, then it will try to skip products that definitely do not contribute.
     """
+
+    if theory == "phi4":
+        # 
+        from src.can_diagrams.phi4.canonical_diagrams import can_points, can_connections, can_count
+
+    elif theory == "qcd":
+        # Import the canonical diagrams for QCD
+        from src.can_diagrams.qcd.full_theory.canonical_diagrams import can_points, can_connections, can_count
+
+    elif theory == "qcd_gluons":
+        # 
+        from src.can_diagrams.qcd.gluons.canonical_diagrams import can_points, can_connections, can_count
+        pass
+    else:
+        raise ValueError(f"Unknown theory: {theory}")
 
     #Similar to the one type of particle case, we need to first approximate the number of new diagrams that will produce.
     curr_order = len(points)
@@ -267,7 +281,7 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
                             new_connections[n, l, m] = simp_connections[l, m]
                     new_count[n] = count[0][i] * count[-1][j]
                     n += 1
-    for i in range(1, 2):
+    for i in range(1, len(can_connections)):
         for j in range(i-1, len(connections)):
             if (i+1 + j) == curr_order:
                 for k in range(len(can_connections[i])):

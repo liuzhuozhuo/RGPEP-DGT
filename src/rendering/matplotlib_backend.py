@@ -151,4 +151,4 @@ def represent_order_diagram(points, connection, symmetry_num, process, colors_=[
             rearrange_in_out_points(points[i], connection[i])
             points[i]=equalize_x_spacing(points[i], 2)
             find_loops(points[i], connection[i])
-            represent_diagram_as_png_feynman(points[i], connection[i], i, colors=colors_, flavour_=flavour, linestyle_=linestyle, arrow_=arrow, directory=directory_, figsize_=figsize)
+            represent_diagram_as_png_feynman(points[i], connection[i], symmetry_num[i], colors=colors_, flavour_=flavour, linestyle_=linestyle, arrow_=arrow, directory=directory_, figsize_=figsize)
