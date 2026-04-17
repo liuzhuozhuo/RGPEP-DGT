@@ -69,6 +69,35 @@ def how_connected(max_connections, n_connections, n_1, n_2):
     else:
         return combinations
     
+from itertools import combinations, permutations
+def get_all_pairings(n_1, n_2):
+    """
+    Returns all possible connection configurations between set 1 (1..n_1)
+    and set 2 (1..n_2), as an array of shape (N, min(n1,n2), 2).
+    
+    Each configuration is a set of k unique pairs (no element reused),
+    for k from 1 to min(n_1, n_2), zero-padded to min(n_1, n_2) rows.
+    """
+    max_pairs = min(n_1, n_2)
+    set1 = list(range(1, n_1 + 1))
+    set2 = list(range(1, n_2 + 1))
+    
+    all_configs = []
+
+    # k = number of active pairs in this configuration
+    for k in range(1, max_pairs + 1):
+        # Choose k elements from set1, then pair each permutation with k elements from set2
+        for s1_combo in combinations(set1, k):
+            for s2_combo in combinations(set2, k):
+                for s1_perm in permutations(s1_combo):
+                    # Build a zero-padded (max_pairs, 2) matrix
+                    config = np.zeros((max_pairs, 2), dtype=int)
+                    for i, (a, b) in enumerate(zip(s1_perm, s2_combo)):
+                        config[i] = [a, b]
+                    all_configs.append(config)
+
+    return np.array(all_configs)
+    
 def make_connection (points1, connections1, points2, connections2, order, offset = 0):
     in_out_connections1 = in_out_connections(connections1)
     in_out_connections2 = in_out_connections(connections2)
@@ -118,7 +147,7 @@ def make_connection (points1, connections1, points2, connections2, order, offset
     dummy_combinations = np.zeros((int(sum(n_connections)*((order+1)/2)), n_types,  max(max_connections), 2), dtype=int)
     n = 0
     for i in range(n_types):
-        dummy_var = how_connected(max_connections[i], n_connections[i], n1[i], n2[i])
+        dummy_var = get_all_pairings(n1[i], n2[i])
         for j in range(n_connections[i]):
             for k in range(max_connections[i]):
                 if(dummy_var[j, k, 0] != 0 and dummy_var[j, k, 1] != 0):
@@ -198,7 +227,6 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
     elif theory == "qcd_gluons":
         # 
         from src.can_diagrams.qcd.gluons.canonical_diagrams import can_points, can_connections, can_count
-        pass
     else:
         raise ValueError(f"Unknown theory: {theory}")
 
@@ -243,8 +271,8 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
                 if subset & (1 << k):
                     product *= n_connections[k]
             n_connec += product
-    n = 0
-    f = 20
+
+    n = 0 #This variable will be used to fill the new_points, new_connections and new_count arrays
 
     new_points = np.zeros((4*n_types*len(connections[0])*len(connections[-1])*n_connec*(curr_order+1), len(points[0][0]) + len(points[-1][0]), 2))
     new_connections = np.zeros((4*n_types*len(connections[0])*len(connections[-1])*n_connec*(curr_order+1), n_types, len(connections[0][0]) + len(connections[-1][0])+np.max(max_connections)+5, 2), dtype=int)
