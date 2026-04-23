@@ -1,0 +1,15 @@
+- hacer para teoría phi 4, 3 a1 1 a 3 2 a 2,
+- contaje
+- hacer interfaz mas facil para el usuario - hecho
+- comentarios
+- particulas entrada y salida
+- formato, orden y teoría
+- comprobar contraterminos
+
+- ordenes superiores, necesito comprobar en el otro ordenador, ya que en este no tengo suficiente ram
+
+
+- add kinetic term
+- lista de terminos antes de conexiones
+- arreglar conteo 
+- terminar phi4
