@@ -543,3 +543,55 @@ def find_loops (points, connections, min_loop_len=3):
                     points[idx, 1] = points[other_idx, 1]
                 else:
                     points[idx, 1] += 1
+
+
+def new_in_out_array(in_out_1, in_out_2):
+    in_out_1 = np.array(in_out_1)
+    in_out_2 = np.array(in_out_2)
+
+    dim = min(np.max(in_out_2[:, 1]), np.max(in_out_1[:, 0]))
+    new_in_out = np.zeros((dim,len(in_out_1) ,2), dtype=int)
+    for i in range(len(in_out_1)):
+        for j in range(1, min(in_out_2[i][1], in_out_1[i][0])+1):
+            if in_out_2[i][1] != 0 and in_out_1[i][0] != 0 and in_out_2[i][0] != 0 and in_out_1[i][1] != 0:
+                new_in_out[j-1][i][0] = in_out_1[i][0] + in_out_2[i][0] - j
+                new_in_out[j-1][i][1] = in_out_1[i][1] + in_out_2[i][1] - j
+    return new_in_out
+
+def return_diagram_framewok(can_points1, can_paths1, can_points2, can_paths2, in_out1, in_out2):
+    in_out1 = np.array(in_out1)
+    in_out2 = np.array(in_out2)
+    n1 = len(in_out1.shape)
+    n2 = len(in_out2.shape)
+    if n1 != 2 and n2 != 2:
+        in_out_array = []
+        for i in range(len(in_out1)):
+            for j in range(len(in_out2)):
+                aux = (new_in_out_array(in_out1[i], in_out2[j]))
+                for k in range(len(aux)):
+                    in_out_array.append(aux[k])
+    elif n1 != 2 and n2 == 2:
+        in_out_array = []
+        for i in range(len(in_out1)):
+            aux = (new_in_out_array(in_out1[i], in_out2))
+            for k in range(len(aux)):
+                in_out_array.append(aux[k])
+    elif n1 == 2 and n2 != 2:
+        in_out_array = []
+        for i in range(len(in_out2)):
+            aux = (new_in_out_array(in_out1, in_out2[i]))
+            for k in range(len(aux)):
+                in_out_array.append(aux[k])
+    else:
+        in_out_array = (new_in_out_array(in_out1, in_out2))
+    points = np.zeros((len(can_points1) + len(can_points2), 2))
+    paths = np.zeros((len(can_paths1), len(can_paths1[0]) + len(can_paths2[0]), 2), dtype=int)
+    points[:len(can_points1)] = can_points1
+    points[len(can_points1):] = can_points2 + np.array([np.max(can_points1)+1, 0])
+    paths[:len(can_paths1), :len(can_paths1[0])] = can_paths1
+    for i in range(len(can_paths1)):
+        for j in range(len(can_paths1[0]), len(can_paths1[0]) + len(can_paths2[0])):
+            if can_paths2[i][j-len(can_paths1[0])][0] != 0 or can_paths2[i][j-len(can_paths1[0])][1] != 0:
+                paths[i][j] = can_paths2[i][j-len(can_paths1[0])] + np.array([len(can_points1), len(can_points1)])
+
+    return points, paths, in_out_array

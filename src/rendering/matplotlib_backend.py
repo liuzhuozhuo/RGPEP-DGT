@@ -134,21 +134,28 @@ def represent_diagram_as_png_feynman (points, connection, symmetry_num, colors, 
     diagram.draw()
     plt.show()
 
-def represent_order_diagram(points, connection, symmetry_num, process, colors_=['black', 'black', 'blue', 'red'], flavour=['loopy','simple', 'simple', 'simple'], linestyle = ["solid", "dotted", "solid", "solid"], directory_ = "", figsize=(4,3), arrow = [False, False, True, True]):
-    for i in range(len(points)):
-        in_out_connections_ = in_out_connections(connection[i])
-        inp = [len(np.trim_zeros(in_out_connections_[0, 0]))]
-        out = [len(np.trim_zeros(in_out_connections_[0, 1]))]
-        for j in range(1, len(connection[i])):
-            inp.append(len(np.trim_zeros(in_out_connections_[j, 0])))
-            out.append(len(np.trim_zeros(in_out_connections_[j, 1])))
-        equal = True
-        for j in range(len(connection[i])):
-            if inp[j] != process[0][j] or out[j] != process[1][j]:
-                equal = False
-                break
-        if equal:
-            rearrange_in_out_points(points[i], connection[i])
-            points[i]=equalize_x_spacing(points[i], 2)
-            find_loops(points[i], connection[i])
-            represent_diagram_as_png_feynman(points[i], connection[i], symmetry_num[i], colors=colors_, flavour_=flavour, linestyle_=linestyle, arrow_=arrow, directory=directory_, figsize_=figsize)
+def represent_order_diagram(points, connection, symmetry_num, all_in_out, mode, process, colors_=['black', 'black', 'blue', 'red'], flavour=['loopy','simple', 'simple', 'simple'], linestyle = ["solid", "dotted", "solid", "solid"], directory_ = "", figsize=(4,3), arrow = [False, False, True, True]):
+    if mode == "framework":
+        for i in range(len(points)):
+            for j in range(len(all_in_out[i])):
+                if all_in_out[i][j][0][0] == process[0][0] and all_in_out[i][j][0][1] == process[1][0] and all_in_out[i][j][1][0] == process[0][1] and all_in_out[i][j][1][1] == process[1][1]:
+                    represent_diagram_as_png_feynman(points[i], connection[i], 0, colors=['black', 'black', 'blue', 'red'], flavour_=['simple','simple', ' simple', 'simple'])
+    else:   
+        for i in range(len(points)):
+            in_out_connections_ = in_out_connections(connection[i])
+            inp = [len(np.trim_zeros(in_out_connections_[0, 0]))]
+            out = [len(np.trim_zeros(in_out_connections_[0, 1]))]
+            for j in range(1, len(connection[i])):
+                inp.append(len(np.trim_zeros(in_out_connections_[j, 0])))
+                out.append(len(np.trim_zeros(in_out_connections_[j, 1])))
+            equal = True
+            for j in range(len(connection[i])):
+                if inp[j] != process[0][j] or out[j] != process[1][j]:
+                    equal = False
+                    break
+            if equal:
+                rearrange_in_out_points(points[i], connection[i])
+                points[i]=equalize_x_spacing(points[i], 2)
+                find_loops(points[i], connection[i])
+                represent_diagram_as_png_feynman(points[i], connection[i], symmetry_num[i], colors=colors_, flavour_=flavour, linestyle_=linestyle, arrow_=arrow, directory=directory_, figsize_=figsize)
+    
