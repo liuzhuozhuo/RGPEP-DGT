@@ -4,6 +4,11 @@ from src.transforms.concatenation import combine_diagrams_order, return_diagram_
 from src.rendering.matplotlib_backend import *  # Import the file that renders the diagrams using matplotlib
 
 def calculate_diagrams(theory, in_particles, out_particles, till_order, mode = "complete"):
+    if isinstance(in_particles, int):
+        in_particles = [in_particles, 0]
+    if isinstance(out_particles, int):
+        out_particles = [out_particles, 0]
+
     if theory == "phi4":
         # 
         from src.can_diagrams.phi4.canonical_diagrams import can_points, can_connections, can_count
@@ -70,10 +75,21 @@ def calculate_diagrams(theory, in_particles, out_particles, till_order, mode = "
                             if p+q+1 == n:
                                 points, paths, in_out_array = return_diagram_framewok(all_points[q][i], all_paths[q][i], all_points[p][j], all_paths[p][j], all_in_out[q][i], all_in_out[p][j])
                                 points = compress_first_column(points)
-                                if not is_array_in_list(points, new_points):
-                                    new_points.append(points)
-                                    new_paths.append(paths)
-                                    new_in_out.append(in_out_array)
+                                if n == till_order-1:
+                                    aux = False
+                                    for k in range(len(in_out_array)):
+                                        if in_out_array[k][0][0] == in_particles[0] and in_out_array[k][1][0] == in_particles[1] and in_out_array[k][0][1] == out_particles[0] and in_out_array[k][1][1] == out_particles[1]:
+                                            aux = True
+                                            break
+                                    if not is_array_in_list(points, new_points) and aux:
+                                        new_points.append(points)
+                                        new_paths.append(paths)
+                                        new_in_out.append(in_out_array)
+                                else:
+                                    if not is_array_in_list(points, new_points):
+                                        new_points.append(points)
+                                        new_paths.append(paths)
+                                        new_in_out.append(in_out_array)
             all_points.append(new_points)
             all_paths.append(new_paths)
             all_in_out.append(new_in_out)
