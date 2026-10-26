@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "RGPEP-DGT: Renormalization Group Procedure for Effective Particles - Diagram Generation Tool"
+authors:
+  - family-names: Liu
+    given-names: Zhuozhuo
+version: 0.0.1
+repository-code: "https://github.com/liuzhuozhuo/RGPEP-DGT"

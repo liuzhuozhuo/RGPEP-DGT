@@ -6,9 +6,9 @@ See [assessment.md](assessment.md) for the reasoning behind each item.
 1. **Safety net first.** ✅ *Done (2026-10-26), see "Status" below.* Add `pytest` tests that pin down known results, such as diagram counts for φ⁴ 1→1, 2→2 and 1→3 at orders 2–3, and Głazek's known O(g²) QCD terms. Fix bugs 1, 6, 7 and 8. Remove the committed `.pyc` files (`git rm --cached`), and strip notebook outputs (`nbstripout`).
 2. **Packaging.** ✅ *Done (2026-10-26), see "Status" below.* Rename `src/` to `rgpep_dgt/` (or use the `src/rgpep_dgt/` layout), complete `pyproject.toml` with a build system and dependencies, and add `__init__` exports.
 3. **New core, in parallel with the old one.** ✅ *Done (2026-10-26), see "Status" below.* Add the theory DSL, the graph-based `Diagram`, a generator for contractions, and isomorphism dedup. Validate it against `tests/wick_reference.py` and the literature tests, then switch over. The generator must enumerate each ordered product of initial terms once, with every Wick contraction allowed by the bracketing rule of [docs/literature.md](literature.md). That is the only way to fix the remaining overcounting at order ≥ 3.
-4. **Physics features from `changes.txt`:** kinetic-term / counterterm insertion (the commented-out blocks), a list of terms before contraction, correct counting and symmetry factors, and labelled in/out particles.
+4. **Physics features from `changes.txt`:** ✅ *Done (2026-10-26), see "Status" below.* kinetic-term / counterterm insertion (the commented-out blocks), a list of terms before contraction, correct counting and symmetry factors, and labelled in/out particles.
 5. **Higher orders and performance.** Prune unreachable branches, cache order-n results to disk (pickle or JSON), and optionally use multiprocessing across (A, B) pairs.
-6. **Output and docs.** Add TikZ export and an algebraic expression per diagram (operator string plus form-factor / energy-denominator structure). This is the step that makes the tool useful for actual RGPEP calculations. Also fill in the README (theory background, usage), CITATION.cff and docs, and add CI (GitHub Actions running pytest).
+6. **Output and docs.** ✅ *Done (2026-10-26), see "Status" below.* Add TikZ export and an algebraic expression per diagram (operator string plus form-factor / energy-denominator structure). This is the step that makes the tool useful for actual RGPEP calculations. Also fill in the README (theory background, usage), CITATION.cff and docs, and add CI (GitHub Actions running pytest).
 
 ## Verification
 - `pytest` passes with count tests for φ⁴ and the gluon theory at orders 1–3.
@@ -56,3 +56,23 @@ Still open:
 - **Exports:** `rgpep_dgt/__init__.py` exports `calculate_diagrams`, `represent_order_diagram`, `get_theory`, `generate_diagrams`, `term_products`, `Theory`, `Term` and `Diagram`. The notebooks import from the package.
 - **README:** installation, usage, project structure, dependencies and tests are filled in. Motivation and theoretical background are still to be written.
 - **Checked:** the wheel contains every subpackage, and the installed package runs from outside the repository. All tests pass and both notebooks run.
+
+### Step 4 (2026-10-26)
+- **Counterterms:** `get_theory(name, counterterms=True, max_order=n)` and `calculate_diagrams(..., counterterms=True)` add mass and coupling-constant counterterms where the theory has loop corrections (see [literature.md](literature.md)). With them, the gluon vertex at third order has all 10 diagrams of [GR15] Fig. 7. Counterterm vertices are part of the diagram key and are drawn as marked vertices.
+- **Kinetic term:** read as the mass counterterm. H_f is not a vertex in RGPEP.
+- **Counting and symmetry factors:** every diagram has an exact `weight`. φ⁴ terms carry 1/(k! l!), which reproduces the textbook symmetry factors.
+- **List of terms before contraction:** `term_products` with `products_table` (step 6).
+- **Labelled in/out particles:** `external_legs` numbers the external particles, outgoing first. The labels are used in expressions and drawings (step 6).
+
+### Step 6 (2026-10-26)
+- **`rgpep_dgt/engine/expressions.py`:** writes each diagram as a Hamiltonian term, `f_t [Σ B^(...)] weight (product of terms) -> a†1 a†2 a3`, with [G12]'s coefficient labels, in text or LaTeX. It also has the products table.
+- **`rgpep_dgt/rendering/tikz.py`:**
+  - TikZ-Feynman code for each diagram, with gluon, quark and instantaneous line styles, labelled external particles, crossed dots for counterterms and bent parallel lines;
+  - `write_latex` writes a document with drawings and expressions, which compiles with pdflatex.
+- **Project files:** README (counterterms, expressions, LaTeX), `CITATION.cff`, a GitHub Actions workflow that runs pytest, and a demo cell at the end of `example.ipynb`.
+
+Still open:
+- The automatic layout can cross lines in multi-type diagrams. A layered layout that orders vertices in y by their connections would help.
+- Motivation and theoretical background in the README are yours to write.
+- The coefficients B are given as labels. Evaluating them (the integrals of A over t) for given momenta would be the next step towards numbers.
+- Step 5 (performance) and removing the legacy engine.

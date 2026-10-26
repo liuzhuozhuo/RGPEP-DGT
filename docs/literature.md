@@ -53,6 +53,40 @@ Everything else is computed by the brute-force reference in `tests/wick_referenc
 
 `qcd_gluons`, 1→2, order 3 produces exactly these 7 topologies (`test_three_gluon_vertex_third_order_matches_gomez_rocha_glazek`). [GR15] Sec. II.A also explains why quartic gluon terms are drawn as two 3-vertices joined by an instantaneous line: they are regulated "as if built solely from vertices in which one quantum is changed to two or vice versa".
 
+## Counterterms
+
+The initial condition G₀ₙ contains counterterms ([G12], Sec. 2.4 and 3.3):
+- G₀₂ includes "self-interaction counterterms";
+- G₀₃ is "a third-order coupling constant counterterm";
+- G₀₄ "includes the self-interaction and coupling-constant counterterms … [and] box-diagram counterterms, where they are needed".
+
+[GR15] Fig. 7 shows them in the gluon vertex: mass counterterms on the legs, (f) and (i), and the vertex counterterm (j).
+
+`add_counterterms` adds point-like counterterms:
+- a mass counterterm (a†a) for every type of particle;
+- a coupling-constant counterterm with the operators of every first-order term.
+
+Each is added at every order where the theory without counterterms has a loop correction to that operator. This gives the gluon mass counterterm at O(g²) and the vertex counterterm at O(g³), as in [GR15], and the φ⁴ coupling counterterm at O(λ²). Box counterterms and counterterms for second-order operators are not added.
+
+The free Hamiltonian H_f never appears as a vertex: it only enters through the factors A and B. So the mass counterterm is the only bilinear insertion. This is how the "kinetic term" item of `changes.txt` was read.
+
+## Weights and symmetry factors
+
+With terms normalised as in φ⁴/4!, the a†ᵏaˡ term has the factor 1/(k! l!). The weight of a diagram is then the sum over products of (product of term factors) × (Wick count). When all external lines of each kind attach to one vertex, weight × ∏(n!) over those groups equals 1/S, with S the usual symmetry factor (Peskin & Schroeder, Sec. 4.4). The tests check:
+- the sunset: S = 3!;
+- the bubble: S = 2;
+- a chain of two bubbles: S = 4.
+
+The QCD files draw some operators several times instead of using these factors (e.g. the four t-channel instantaneous terms), so for them the weight equals the count.
+
+## RGPEP coefficients
+
+A diagram is built from a product of n terms through one or more bracketings (rule 3). Each bracketing gives one of the coefficients B of [G12] App. B.1:
+- Configurations are numbered 1 … n+1 around the factors.
+- A product of two groups spanning configurations i … k and split at j gives the label (ijk, labels of the groups with more than one factor). It is 0 when both groups are single factors.
+
+For example, the bracketing (0, (1, 2)) gives B⁽¹²⁴'⁽²³⁴'⁰⁾⁾. The five bracketings of four factors give exactly the five labels of [G12] Eq. (32), and the tests check this. The coefficient of a diagram is the sum over its bracketings, multiplied by the form factor f_t.
+
 ## Status of the engines
 
 - **`engine="new"` (default, `rgpep_dgt/engine/`).** Implements rules 1–5 directly. It agrees with the brute-force reference (diagrams *and* counts) for φ⁴ up to fourth order. It agrees exactly with the legacy engine at second order for gluons and QCD, and produces the [GR15] Fig. 7 diagram set.

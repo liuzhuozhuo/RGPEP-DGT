@@ -5,7 +5,7 @@ from rgpep_dgt.transforms.concatenation import combine_diagrams_order, return_di
 
 from rgpep_dgt.rendering.matplotlib_backend import *  # Import the file that renders the diagrams using matplotlib
 
-def calculate_diagrams(theory, in_particles, out_particles, till_order, mode = "complete", engine = "new"):
+def calculate_diagrams(theory, in_particles, out_particles, till_order, mode = "complete", engine = "new", counterterms = False):
     """
     Diagrams of order till_order for a process with in_particles incoming and out_particles outgoing particles
     (numbers for each type of particle, or an int for theories with one type).
@@ -17,6 +17,9 @@ def calculate_diagrams(theory, in_particles, out_particles, till_order, mode = "
 
     engine = "new" uses rgpep_dgt/engine, which follows docs/literature.md and counts each contraction once.
     engine = "legacy" uses the original iterative construction, which overcounts from third order on.
+
+    counterterms = True adds mass and coupling constant counterterms to the theory (new engine only), see
+        rgpep_dgt.engine.theory.add_counterterms.
     """
     if isinstance(in_particles, int):
         in_particles = [in_particles, 0]
@@ -29,7 +32,7 @@ def calculate_diagrams(theory, in_particles, out_particles, till_order, mode = "
         from rgpep_dgt.engine.arrays import stack, product_to_arrays
         from rgpep_dgt.transforms.concatenation import stack_diagrams
 
-        rgpep_theory = get_theory(theory)
+        rgpep_theory = get_theory(theory, counterterms, till_order if counterterms else None)
         if mode == "complete":
             diagrams = generate_diagrams(rgpep_theory, till_order, in_particles, out_particles)
             points, connections, count = stack(diagrams, rgpep_theory.n_types)
@@ -42,6 +45,8 @@ def calculate_diagrams(theory, in_particles, out_particles, till_order, mode = "
         raise ValueError(f"Unknown mode: {mode}")
     elif engine != "legacy":
         raise ValueError(f"Unknown engine: {engine}")
+    if counterterms:
+        raise ValueError("Counterterms are only available with engine=\"new\"")
 
     if theory == "phi4":
         # 

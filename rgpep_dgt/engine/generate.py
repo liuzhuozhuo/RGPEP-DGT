@@ -12,6 +12,7 @@ number of labelled contractions (Wick terms) that give the same lines is compute
 """
 from collections import Counter
 from dataclasses import dataclass, field
+from fractions import Fraction
 from functools import cached_property, lru_cache
 from math import factorial, prod
 
@@ -22,21 +23,27 @@ class Diagram:
     n_vertices: number of vertices, numbered by their position in the product
     lines: sorted tuple of (type, vertex a, vertex b, number of lines) with a <= b, including internal lines of terms
     external: sorted tuple of (vertex, type, "out" or "in", number of lines)
+    counterterms: sorted tuple of the vertices that are counterterms
     count: number of Wick contractions that give the diagram, summed over all products of terms
+    weight: count with every product multiplied by the weights of its terms (e.g. 1/(k! l!) in phi^4). For a
+        diagram whose external lines of each type and direction all attach to one vertex, weight * prod(n!) over
+        those groups of n external lines is the usual 1/S, with S the symmetry factor.
     products: term sequence (tuple of term indices) -> count from that product
     n_factors, factor_pairs: number of terms in the product and (left, right) factors of every contraction
     """
     n_vertices: int
     lines: tuple
     external: tuple
+    counterterms: tuple = ()
     count: int = 0
+    weight: Fraction = Fraction(0)
     products: Counter = field(default_factory=Counter)
     n_factors: int = 0
     factor_pairs: frozenset = frozenset()
 
     @property
     def key(self):
-        return self.n_vertices, self.lines, self.external
+        return self.n_vertices, self.lines, self.external, self.counterterms
 
     @cached_property
     def bracketings(self):
@@ -205,6 +212,9 @@ def generate_diagrams(theory, order, n_in, n_out):
         in_legs = [list(inc) for term in terms for _, inc in term.legs]
         internal = Counter((t, a + offsets[f], b + offsets[f]) for f, term in enumerate(terms) for t, a, b in term.lines)
         multiplicity = prod(term.count for term in terms)
+        term_weight = prod((term.weight for term in terms), start=Fraction(1))
+        counterterms = tuple(offsets[f] + k for f, term in enumerate(terms) if term.counterterm
+                             for k in range(term.n_vertices))
 
         for contracted, external_out, external_in, factor_of in contractions(terms, n_in, n_out, n_types):
             factor_pairs = frozenset((factor_of[u], factor_of[v]) for _, u, v in contracted)
@@ -218,9 +228,11 @@ def generate_diagrams(theory, order, n_in, n_out):
             external += [(v, t, "in", external_in[v][t]) for v in range(len(in_legs)) for t in range(n_types)
                          if external_in[v][t]]
             diagram = Diagram(n_vertices=len(out_legs), lines=tuple(sorted((t, a, b, m) for (t, a, b), m in lines.items())),
-                              external=tuple(sorted(external)), n_factors=len(terms), factor_pairs=factor_pairs)
+                              external=tuple(sorted(external)), counterterms=counterterms, n_factors=len(terms),
+                              factor_pairs=factor_pairs)
             diagram = diagrams.setdefault(diagram.key, diagram)
             diagram.count += count
+            diagram.weight += term_weight * count
             diagram.products[sequence] += count
 
     return [diagrams[key] for key in sorted(diagrams)]
