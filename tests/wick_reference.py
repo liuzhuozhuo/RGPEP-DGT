@@ -17,7 +17,7 @@ A vertex is described by (number of outgoing lines, number of incoming lines), i
 operators. The count of a diagram is the number of different contractions (Wick terms) that give it.
 """
 from collections import Counter
-from functools import lru_cache
+from functools import cache, lru_cache
 from itertools import product
 
 
@@ -62,12 +62,13 @@ def _is_rgpep_term(n, pairs):
     return valid(0, n)
 
 
+@cache
 def rgpep_diagrams(vertex_types, order, n_in, n_out):
     """
     Counts of the diagrams of a given order and process.
 
     Args:
-        vertex_types (list): (out, in) lines of every first-order term of the theory
+        vertex_types (tuple): (out, in) lines of every first-order term of the theory
         order (int): order in the coupling constant
         n_in, n_out (int): number of incoming and outgoing particles
     Returns:
@@ -91,4 +92,4 @@ def rgpep_diagrams(vertex_types, order, n_in, n_out):
 
 # Front-form phi^4: a+a+aa, a+a+a+a and a+aaa. Terms with only creation or only annihilation operators vanish
 # because p+ > 0 for every particle.
-PHI4_VERTICES = [(2, 2), (3, 1), (1, 3)]
+PHI4_VERTICES = ((2, 2), (3, 1), (1, 3))

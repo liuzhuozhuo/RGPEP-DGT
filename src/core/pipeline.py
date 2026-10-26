@@ -5,11 +5,43 @@ from src.transforms.concatenation import combine_diagrams_order, return_diagram_
 
 from src.rendering.matplotlib_backend import *  # Import the file that renders the diagrams using matplotlib
 
-def calculate_diagrams(theory, in_particles, out_particles, till_order, mode = "complete"):
+def calculate_diagrams(theory, in_particles, out_particles, till_order, mode = "complete", engine = "new"):
+    """
+    Diagrams of order till_order for a process with in_particles incoming and out_particles outgoing particles
+    (numbers for each type of particle, or an int for theories with one type).
+
+    mode = "complete" returns (points, connections, count, diagrams): every diagram with the number of Wick
+        contractions that give it. With engine="new", diagrams is the list of src.engine.generate.Diagram.
+    mode = "framework" returns (points, paths, 0, products): the products of canonical terms that contribute,
+        drawn without contractions. With engine="new", products maps each sequence of term indices to its count.
+
+    engine = "new" uses src/engine, which follows docs/literature.md and counts each contraction once.
+    engine = "legacy" uses the original iterative construction, which overcounts from third order on.
+    """
     if isinstance(in_particles, int):
         in_particles = [in_particles, 0]
     if isinstance(out_particles, int):
         out_particles = [out_particles, 0]
+
+    if engine == "new":
+        from src.engine.theory import get_theory
+        from src.engine.generate import generate_diagrams, term_products
+        from src.engine.arrays import stack, product_to_arrays
+        from src.transforms.concatenation import stack_diagrams
+
+        rgpep_theory = get_theory(theory)
+        if mode == "complete":
+            diagrams = generate_diagrams(rgpep_theory, till_order, in_particles, out_particles)
+            points, connections, count = stack(diagrams, rgpep_theory.n_types)
+            return points, connections, count, diagrams
+        elif mode == "framework":
+            products = term_products(rgpep_theory, till_order, in_particles, out_particles)
+            points, paths, _ = stack_diagrams([product_to_arrays(rgpep_theory, sequence) + (products[sequence],)
+                                               for sequence in products], rgpep_theory.n_types)
+            return points, paths, 0, products
+        raise ValueError(f"Unknown mode: {mode}")
+    elif engine != "legacy":
+        raise ValueError(f"Unknown engine: {engine}")
 
     if theory == "phi4":
         # 

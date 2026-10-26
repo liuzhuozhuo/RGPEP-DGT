@@ -53,6 +53,9 @@ Everything else is computed by the brute-force reference in `tests/wick_referenc
 
 `qcd_gluons`, 1→2, order 3 produces exactly these 7 topologies (`test_three_gluon_vertex_third_order_matches_gomez_rocha_glazek`). [GR15] Sec. II.A also explains why quartic gluon terms are drawn as two 3-vertices joined by an instantaneous line: they are regulated "as if built solely from vertices in which one quantum is changed to two or vice versa".
 
-## Known disagreement
+## Status of the engines
 
-At third order and above the code finds the right set of diagrams, but counts some of them more than once (rule 4). Order 3 is a factor of 2; order 4 is a factor of up to 4. The test `test_phi4_counts_match_reference` is marked `xfail(strict=True)` until the generator is rewritten (see [roadmap.md](roadmap.md), step 3).
+- **`engine="new"` (default, `src/engine/`).** Implements rules 1–5 directly. It agrees with the brute-force reference (diagrams *and* counts) for φ⁴ up to fourth order. It agrees exactly with the legacy engine at second order for gluons and QCD, and produces the [GR15] Fig. 7 diagram set.
+- **`engine="legacy"`.** Finds the same diagrams, but from third order on it counts a contraction once for every bracketing that reaches it (rule 4 is violated): a factor 2 at third order and up to 4 at fourth order. The tests that show this are marked `xfail(strict=True)`.
+
+Each diagram of the new engine also records its `bracketings`: the ways the product is built from products of two factors. These say which RGPEP coefficients multiply the diagram. For example, a third-order pattern with contractions 0–2 and 1–2 only comes from the bracketing (0, (1, 2)), i.e. only the coefficient B⁽¹²⁴⁾ of [G12] Eq. (31) contributes.

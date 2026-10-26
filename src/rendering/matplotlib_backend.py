@@ -4,7 +4,7 @@ import matplotlib as mpl
 
 from src.transforms.format import *
 from src.search.comparison import find_equal_subarrays, find_equal_subarrays_3D
-from src.transforms.concatenation import in_out_connections, rearrange_in_out_points, equalize_x_spacing, find_loops
+from src.transforms.concatenation import in_out_connections, rearrange_in_out_points, equalize_x_spacing, find_loops, matches_process
 
 def represent_diagram_as_png (points, connection, symmetry_num, colors, linestyles, show_index = True, directory = "", figsize_=(4,2)):
 
@@ -41,7 +41,7 @@ def represent_diagram_as_png (points, connection, symmetry_num, colors, linestyl
                     else:
                         ax.plot([points[conn[i, 0]-1, 0], points[conn[i, 1]-1, 0]], [points[conn[i, 0]-1, 1], points[conn[i, 1]-1, 1]], color=colors[j])
             else:
-                if np.isin(i, np.concatenate(loops)):
+                if loops and np.isin(i, np.concatenate(loops)):
                     middle_point = (points[conn[i, 0]-1] + points[conn[i, 1]-1]) / 2
                     circle = plt.Circle((middle_point[0], middle_point[1]), np.linalg.norm(points[conn[i, 0]-1]-middle_point), color=colors[j], fill=False, linestyle=linestyles[j])
                     ax.add_patch(circle)
@@ -136,27 +136,15 @@ def represent_diagram_as_png_feynman (points, connection, symmetry_num, colors, 
     plt.show()
 
 def represent_order_diagram(points, connection, symmetry_num, all_in_out=None, mode="complete", order=1, process=None, colors_=['black', 'black', 'blue', 'red'], flavour=['loopy','simple', 'simple', 'simple'], linestyle = ["solid", "dotted", "solid", "solid"], directory_ = "", figsize=(4,3), arrow = [False, False, True, True]):
+    if process is not None:
+        process = [[p, 0] if isinstance(p, int) else p for p in process]
     if mode == "framework":
-        if isinstance(process[0], int):
-            process[0] = [process[0], 0]
-        if isinstance(process[1], int):
-            process[1] = [process[1], 0]
         for i in range(len(points)):
             represent_diagram_as_png_feynman(points[i], connection[i], 0, colors=['black', 'black', 'blue', 'red'], flavour_=['simple','simple', ' simple', 'simple'], figsize_=(order+2, 3))
     else:   
         for i in range(len(points)):
-            in_out_connections_ = in_out_connections(connection[i])
-            inp = [len(np.trim_zeros(in_out_connections_[0, 0]))]
-            out = [len(np.trim_zeros(in_out_connections_[0, 1]))]
-            for j in range(1, len(connection[i])):
-                inp.append(len(np.trim_zeros(in_out_connections_[j, 0])))
-                out.append(len(np.trim_zeros(in_out_connections_[j, 1])))
-            equal = True
-            for j in range(len(connection[i])):
-                if inp[j] != process[0][j] or out[j] != process[1][j]:
-                    equal = False
-                    break
-            if equal:
+            # Without a process every diagram is drawn
+            if process is None or matches_process(connection[i], process):
                 rearrange_in_out_points(points[i], connection[i])
                 points[i]=equalize_x_spacing(points[i], 2)
                 find_loops(points[i], connection[i])
