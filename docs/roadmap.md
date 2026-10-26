@@ -111,10 +111,7 @@ Still open:
 - **README:** updated for the new structure, the drawings and the notebook.
 
 ## Next: step 7, evaluating the RGPEP coefficients
-See [plan_coefficients.md](plan_coefficients.md). The plan has four phases:
-1. kinematics;
-2. numerical coefficients;
-3. formulas;
-4. vertex functions and loop integrals.
-
-Its checks come from the literature, starting with the second-order gluon mass term of [GR15] Eq. (C7). It needs a few decisions first, listed at the end of the plan.
+See [plan_coefficients.md](plan_coefficients.md).
+- **Decided:** closed formulas first. Each B^(...) is written in terms of the invariant-mass differences ℳ_ij and + momenta p_ij of the groups of factors, using Głazek's generator [H_f, H_Pt].
+- **Sign convention:** checked on paper against the gluon self-energy of [GR15] Eq. (C7). That case is the first test.
+- **Recommended:** numbers for given momenta come afterwards. Vertex functions and loop integrals are not in scope for now.

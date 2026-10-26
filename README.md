@@ -53,7 +53,7 @@ print(expression_table(theory, diagrams))                                  # eve
 write_latex("three_gluon_vertex.tex", theory, diagrams)                    # TikZ-Feynman drawings + expressions
 ```
 
-Each diagram is written as `f_t [sum of RGPEP coefficients B] (weight) (product of terms) -> external operators`. The coefficients B are given as labels; evaluating them is planned in [docs/plan_coefficients.md](docs/plan_coefficients.md). The coefficient labels follow Głazek, Acta Phys. Pol. B 43, 1843 (2012), App. B. The LaTeX file needs the `tikz-feynman` package and compiles with `pdflatex`.
+Each diagram is written as `f_t [sum of RGPEP coefficients B] (weight) (product of terms) -> external operators`. The coefficients B are given as labels. Their closed formulas are planned next, in [docs/plan_coefficients.md](docs/plan_coefficients.md). The coefficient labels follow Głazek, Acta Phys. Pol. B 43, 1843 (2012), App. B. The LaTeX file needs the `tikz-feynman` package and compiles with `pdflatex`.
 
 - **Counterterms.** `counterterms=True` adds mass and coupling-constant counterterms at every order where the theory has a loop correction to them.
 - **Weight.** The weight includes the normalisation of the terms. In φ⁴ that is 1/(k! l!) from φ⁴/4!, so weights reproduce the usual symmetry factors.
