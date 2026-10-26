@@ -20,3 +20,5 @@ jobs:
       - name: Run tests
         # The LaTeX compilation test is skipped when pdflatex is not installed
         run: python -m pytest -q
+      - name: Run legacy engine tests
+        run: python -m pytest -q legacy/tests

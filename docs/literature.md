@@ -89,7 +89,7 @@ For example, the bracketing (0, (1, 2)) gives B⁽¹²⁴'⁽²³⁴'⁰⁾⁾. 
 
 ## Status of the engines
 
-- **`engine="new"` (default, `rgpep_dgt/engine/`).** Implements rules 1–5 directly. It agrees with the brute-force reference (diagrams *and* counts) for φ⁴ up to fourth order. It agrees exactly with the legacy engine at second order for gluons and QCD, and produces the [GR15] Fig. 7 diagram set.
-- **`engine="legacy"`.** Finds the same diagrams, but from third order on it counts a contraction once for every bracketing that reaches it (rule 4 is violated): a factor 2 at third order and up to 4 at fourth order. The tests that show this are marked `xfail(strict=True)`.
+- **`rgpep_dgt.engine` (used by `calculate_diagrams`).** Implements rules 1–5 directly. It agrees with the brute-force reference (diagrams *and* counts) for φ⁴ up to fourth order. It agrees exactly with the legacy engine at second order for gluons and QCD, and produces the [GR15] Fig. 7 diagram set.
+- **The legacy engine (`legacy/`, kept for comparison).** Finds the same diagrams, but from third order on it counts a contraction once for every bracketing that reaches it (rule 4 is violated): a factor 2 at third order and up to 4 at fourth order. The tests that show this are in `legacy/tests` and are marked `xfail(strict=True)`.
 
 Each diagram of the new engine also records its `bracketings`: the ways the product is built from products of two factors. These say which RGPEP coefficients multiply the diagram. For example, a third-order pattern with contractions 0–2 and 1–2 only comes from the bracketing (0, (1, 2)), i.e. only the coefficient B⁽¹²⁴⁾ of [G12] Eq. (31) contributes.

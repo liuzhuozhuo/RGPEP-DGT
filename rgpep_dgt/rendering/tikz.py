@@ -76,8 +76,11 @@ def latex_document(theory, diagrams, title="", products=None):
                  "\\end{verbatim}"]
     body.append("\\subsection*{Diagrams}")
     for k, diagram in enumerate(diagrams):
+        expression = diagram_expression(theory, diagram, latex=True, per_line=3)
+        # Long expressions are broken into lines (multline), short ones stay centred on one line
+        environment = "multline*" if "\\\\" in expression else "equation*"
         body += [f"\\paragraph{{{k + 1}.}}", "\\begin{center}", diagram_tikz(theory, diagram), "\\end{center}",
-                 "\\begin{equation*}", diagram_expression(theory, diagram, latex=True), "\\end{equation*}"]
+                 f"\\begin{{{environment}}}", expression, f"\\end{{{environment}}}"]
     body.append("\\end{document}")
     return "\n".join(body) + "\n"
 

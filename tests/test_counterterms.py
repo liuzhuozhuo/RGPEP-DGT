@@ -63,11 +63,6 @@ def test_counterterm_vertices_are_marked_in_the_arrays():
         assert key_from_arrays(points, connections) == diagram.key
 
 
-def test_legacy_engine_has_no_counterterms():
-    with pytest.raises(ValueError):
-        calculate_diagrams("phi4", 1, 1, 2, engine="legacy", counterterms=True)
-
-
 # Weights: with the normalisation 1/(k! l!) of phi^4/4!, weight times the factorials of the external lines is the
 # symmetry factor 1/S of the corresponding Feynman diagram (Peskin & Schroeder, Sec. 4.4)
 

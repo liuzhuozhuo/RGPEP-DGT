@@ -1,6 +1,6 @@
 import numpy as np
 
-from rgpep_dgt.transforms.format import trim_zeros_3D
+from legacy.transforms.format import trim_zeros_3D
 
 def decrement_number_in_array(array, number):
     array[array == number] -= 1

@@ -93,21 +93,28 @@ def _number(x, latex):
     return f"\\tfrac{{{x.numerator}}}{{{x.denominator}}}" if latex else f"{x.numerator}/{x.denominator}"
 
 
-def diagram_expression(theory, diagram, latex=False):
+def diagram_expression(theory, diagram, latex=False, per_line=0):
     """
     The diagram as a term of the effective Hamiltonian, e.g.
         f_t [B(124,(234,0)) + B(134,(123,0))] 36 (H1_3 H1_1 H1_2) -> a†1 a2
     The number in front of each product is its weight (its count when the terms have no normalisation).
+    With latex=True and per_line > 0, a line break (\\\\) is inserted after every per_line coefficients and after the
+    coefficients, for a multline environment.
     """
     trees = diagram.bracketings
     if latex:
         coefficients = [f"\\mathcal{{B}}_t^{{{coefficient_label(tree)}}}" for tree in trees if not isinstance(tree, int)]
     else:
         coefficients = [f"B{coefficient_label(tree)}" for tree in trees if not isinstance(tree, int)]
+    breaking = latex and per_line > 0 and len(coefficients) > per_line
     if not coefficients:
         coefficient = ""
     elif len(coefficients) == 1:
         coefficient = coefficients[0]
+    elif breaking:
+        # \left and \right cannot span lines, so the brackets have a fixed size
+        groups = [" + ".join(coefficients[k:k + per_line]) for k in range(0, len(coefficients), per_line)]
+        coefficient = "\\Big[" + " \\\\ + ".join(groups) + "\\Big] \\\\"
     else:
         coefficient = ("\\left[" if latex else "[") + " + ".join(coefficients) + ("\\right]" if latex else "]")
 

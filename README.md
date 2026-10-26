@@ -27,7 +27,18 @@ points, connections, count, diagrams = calculate_diagrams("phi4", 1, 1, 3)
 represent_order_diagram(points, connections, count, process=[1, 1])
 ```
 
-The available theories are `"phi4"`, `"qcd_gluons"` and `"qcd"`. For theories with several types of particles, the numbers of incoming and outgoing particles are given as lists (e.g. `[1, 0, 0, 0]` for one gluon in QCD). The notebooks `example.ipynb` and `phi4_test.ipynb` show more examples, including the `"framework"` mode, which lists the products of Hamiltonian terms that contribute.
+The available theories are `"phi4"`, `"qcd_gluons"` and `"qcd"`. For theories with several types of particles, the numbers of incoming and outgoing particles are given as lists (e.g. `[1, 0, 0, 0]` for one gluon in QCD). The notebook `example.ipynb` walks through everything the package does. It covers:
+- theories and their terms;
+- the diagrams of a process, with their counts and symmetry factors;
+- diagrams as Hamiltonian terms with their RGPEP coefficients;
+- the products of terms before contraction (the `"framework"` mode);
+- QCD;
+- counterterms;
+- the contents of a diagram object;
+- LaTeX output;
+- large orders.
+
+It writes its files to `output/`.
 
 ### Counterterms, expressions and LaTeX
 
@@ -42,10 +53,18 @@ print(expression_table(theory, diagrams))                                  # eve
 write_latex("three_gluon_vertex.tex", theory, diagrams)                    # TikZ-Feynman drawings + expressions
 ```
 
-Each diagram is written as `f_t [sum of RGPEP coefficients B] (weight) (product of terms) -> external operators`. The coefficient labels follow Głazek, Acta Phys. Pol. B 43, 1843 (2012), App. B. The LaTeX file needs the `tikz-feynman` package and compiles with `pdflatex`.
+Each diagram is written as `f_t [sum of RGPEP coefficients B] (weight) (product of terms) -> external operators`. The coefficients B are given as labels; evaluating them is planned in [docs/plan_coefficients.md](docs/plan_coefficients.md). The coefficient labels follow Głazek, Acta Phys. Pol. B 43, 1843 (2012), App. B. The LaTeX file needs the `tikz-feynman` package and compiles with `pdflatex`.
 
 - **Counterterms.** `counterterms=True` adds mass and coupling-constant counterterms at every order where the theory has a loop correction to them.
 - **Weight.** The weight includes the normalisation of the terms. In φ⁴ that is 1/(k! l!) from φ⁴/4!, so weights reproduce the usual symmetry factors.
+
+### Drawings
+
+The points of a diagram are placed automatically. The x positions follow the order of the operators in the product: outgoing particles are on the left, incoming ones on the right, numbered as in the expressions. The heights are chosen so that lines do not cross and no point lies on a line it does not belong to.
+
+Counterterm vertices are marked: a crossed dot in LaTeX, a star in the notebooks. In LaTeX, gluons are drawn as springs, instantaneous interactions dotted, and quarks with arrows.
+
+Some diagrams cannot avoid crossings with the vertex order fixed, e.g. four vertices all joined to each other.
 
 ### Large orders
 
@@ -62,13 +81,14 @@ For example, φ⁴ 2→2 at seventh order (121,419 diagrams) takes about 11 s in
   - `generate.py`: products of terms and their Wick contractions.
   - `cache.py`: disk cache of generated diagrams.
   - `expressions.py`: diagrams as Hamiltonian terms, with RGPEP coefficients.
+  - `layout.py`: placement of the points for drawing.
   - `arrays.py`: conversion to the arrays used for drawing.
 - `rgpep_dgt/can_diagrams/` holds the canonical (initial) Hamiltonian terms of each theory.
-- `rgpep_dgt/core/pipeline.py` contains `calculate_diagrams`, the main entry point.
+- `rgpep_dgt/core/` contains `calculate_diagrams` (`pipeline.py`), the main entry point, and helpers for the array format (`array_format.py`).
 - `rgpep_dgt/rendering/` draws the diagrams: `matplotlib_backend.py` in notebooks, and `tikz.py` for LaTeX.
-- `rgpep_dgt/transforms/` and `rgpep_dgt/search/` hold the legacy engine (`engine="legacy"`), kept for comparison.
 - `tests/` contains the tests, including a brute-force reference in `tests/wick_reference.py`.
-- `docs/` contains the assessment, the roadmap and the literature notes.
+- `legacy/` holds the original engine, kept for comparison only, with its own tests. It is not installed with the package; see [legacy/README.md](legacy/README.md).
+- `docs/` contains the assessment, the roadmap, the literature notes and the plan for evaluating the RGPEP coefficients.
 
 ## Dependencies
 
@@ -83,7 +103,7 @@ For example, φ⁴ 2→2 at seventh order (121,419 diagrams) takes about 11 s in
 python -m pytest
 ```
 
-The tests compare the diagrams with hand-derived counts, an independent brute-force enumeration and published results; see [docs/literature.md](docs/literature.md). They run on GitHub Actions on every push.
+The tests compare the diagrams with hand-derived counts, an independent brute-force enumeration and published results; see [docs/literature.md](docs/literature.md). The tests of the legacy engine run separately with `python -m pytest legacy/tests`. Both run on GitHub Actions on every push.
 
 ## Citation
 

@@ -1,13 +1,13 @@
-"""Regression tests for the bugs listed in docs/assessment.md, mostly in the legacy engine."""
+"""Regression tests for the bugs of the legacy engine listed in docs/assessment.md."""
 from math import comb, factorial
 
 import numpy as np
 import pytest
 
-from rgpep_dgt.core.pipeline import calculate_diagrams
-from rgpep_dgt.search.comparison import diagram_signature, group_diagrams
-from rgpep_dgt.transforms.concatenation import get_all_pairings, make_connection, matches_process
-from rgpep_dgt.transforms.simplify import simplify_diagram
+from legacy.pipeline import calculate_diagrams
+from legacy.search.comparison import diagram_signature, group_diagrams
+from legacy.transforms.concatenation import get_all_pairings, make_connection, matches_process
+from legacy.transforms.simplify import simplify_diagram
 
 
 @pytest.mark.parametrize("n_1, n_2", [(1, 1), (2, 3), (3, 3), (4, 2)])
@@ -55,9 +55,8 @@ def test_matches_process_checks_every_type():
     assert matches_process(connections, [[0, 0, 1], [1]])
 
 
-@pytest.mark.parametrize("engine", ["new", "legacy"])
-def test_complete_mode_only_returns_the_process(engine):
-    for points, connections in zip(*calculate_diagrams("qcd", [0, 0, 1, 0], [0, 0, 1, 0], 2, engine=engine)[:2]):
+def test_complete_mode_only_returns_the_process():
+    for points, connections in zip(*calculate_diagrams("qcd", [0, 0, 1, 0], [0, 0, 1, 0], 2)[:2]):
         assert matches_process(connections, [[0, 0, 1, 0], [0, 0, 1, 0]])
 
 
@@ -86,18 +85,17 @@ def test_group_diagrams_merges_relabelled_copies():
     assert list(grouped_count) == [3]
 
 
-@pytest.mark.parametrize("engine", ["new", "legacy"])
-def test_first_order(engine):
-    # Only a+a+a+a has 1 incoming and 3 outgoing particles. The legacy engine returns every first-order term.
-    points, connections, count, _ = calculate_diagrams("phi4", 1, 3, 1, engine=engine)
-    assert len(points) == (1 if engine == "new" else 3)
+def test_first_order_does_not_crash():
+    # The legacy engine returns every first-order term
+    points, connections, count, _ = calculate_diagrams("phi4", 1, 3, 1)
+    assert len(points) == 3
 
 
 def test_framework_gluon_self_energy_has_gluon_and_quark_loop():
     # (a+aa)(a+a+a) and (a+db)(b+d+a). Both products have the same points and only differ in the type of particle
     # of the lines, so they were merged before. The quark loop also needs two types of particles to be connected
     # at the same time, which the in/out bookkeeping did not allow.
-    points, paths, _, _ = calculate_diagrams("qcd", [1, 0, 0, 0], [1, 0, 0, 0], 2, mode="framework", engine="legacy")
+    points, paths, _, _ = calculate_diagrams("qcd", [1, 0, 0, 0], [1, 0, 0, 0], 2, mode="framework")
     assert len(points) == 2
     assert np.array_equal(points[0], points[1])
     assert not np.array_equal(paths[0], paths[1])
@@ -106,5 +104,5 @@ def test_framework_gluon_self_energy_has_gluon_and_quark_loop():
 def test_framework_respects_gluon_number_parity():
     # Every first-order QCD term has an odd number of gluon lines and a contraction removes 2,
     # so at third order there must be an odd number of external gluons
-    points, _, _, _ = calculate_diagrams("qcd", [0, 0, 1, 0], [0, 0, 1, 0], 3, mode="framework", engine="legacy")
+    points, _, _, _ = calculate_diagrams("qcd", [0, 0, 1, 0], [0, 0, 1, 0], 3, mode="framework")
     assert len(points) == 0

@@ -1,8 +1,8 @@
 import numpy as np
 
-from rgpep_dgt.transforms.format import trim_zeros_3D, trim_zeros_2D
-from rgpep_dgt.search.comparison import unique_values
-from rgpep_dgt.transforms.simplify import simplify_diagram
+from legacy.transforms.format import trim_zeros_3D, trim_zeros_2D
+from legacy.search.comparison import unique_values
+from legacy.transforms.simplify import simplify_diagram
 
 def in_out_connections (connections):
     max_len = max([len(path) for path in connections])

@@ -2,9 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
 
-from rgpep_dgt.transforms.format import *
-from rgpep_dgt.search.comparison import find_equal_subarrays, find_equal_subarrays_3D
-from rgpep_dgt.transforms.concatenation import in_out_connections, rearrange_in_out_points, equalize_x_spacing, find_loops, matches_process
+from rgpep_dgt.core.array_format import (equalize_x_spacing, find_equal_subarrays, find_equal_subarrays_3D,
+                                         matches_process, prune_points_and_reindex, trim_zeros_2D, trim_zeros_3D)
 
 def represent_diagram_as_png (points, connection, symmetry_num, colors, linestyles, show_index = True, directory = "", figsize_=(4,2)):
 
@@ -145,8 +144,7 @@ def represent_order_diagram(points, connection, symmetry_num, all_in_out=None, m
         for i in range(len(points)):
             # Without a process every diagram is drawn
             if process is None or matches_process(connection[i], process):
-                rearrange_in_out_points(points[i], connection[i])
+                # The points are already placed by rgpep_dgt.engine.layout, only the horizontal spacing is widened
                 points[i]=equalize_x_spacing(points[i], 2)
-                find_loops(points[i], connection[i])
                 represent_diagram_as_png_feynman(points[i], connection[i], symmetry_num[i], colors=colors_, flavour_=flavour, linestyle_=linestyle, arrow_=arrow, directory=directory_, figsize_=figsize)
     

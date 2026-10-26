@@ -102,3 +102,19 @@ For comparison, the legacy engine needed 12 s for φ⁴ at fourth order.
 Still open:
 - In parallel runs, transferring results between processes is the bottleneck. Returning compact arrays instead of tuples would help if larger orders are needed.
 - The legacy engine is still there for comparison and could be removed.
+
+### Clean-up and drawings (2026-10-26)
+- **Legacy engine:** moved to `legacy/` (outside the package, history kept), with its tests in `legacy/tests` (CI runs them separately). `rgpep_dgt` no longer contains or references it: `calculate_diagrams` has no `engine` option. The array helpers the package still needs are in `rgpep_dgt/core/array_format.py`, copied unchanged.
+- **Drawings:** `rgpep_dgt/engine/layout.py` places the points so that lines do not cross and no point lies on a foreign line or too close to it. It measures distances and angles in the proportions actually drawn, and tries a few starting shapes. It is used by the notebook renderer and the LaTeX output; the old fix-ups (`rearrange_in_out_points`, `find_loops`) are no longer needed. Long expressions are broken into lines in the LaTeX document. `tests/test_layout.py` checks that there are no crossings in the main cases.
+- **Drawings of products of terms (framework mode):** every term keeps its own short legs, as in the original code, so no optimisation is needed. Large diagrams get a shorter layout search, and only the cost terms that change are evaluated. A seventh-order diagram takes about 0.4 s to lay out, a typical one about 30 ms.
+- **Notebooks:** `example.ipynb` was rewritten as a walk-through of the package: theories, diagrams, expressions, products of terms, QCD, counterterms, diagram objects, LaTeX and large orders. `phi4_test.ipynb` was removed: it only showed the framework mode for φ⁴ at seventh order, which drew 163 products and is now covered by a smaller example.
+- **README:** updated for the new structure, the drawings and the notebook.
+
+## Next: step 7, evaluating the RGPEP coefficients
+See [plan_coefficients.md](plan_coefficients.md). The plan has four phases:
+1. kinematics;
+2. numerical coefficients;
+3. formulas;
+4. vertex functions and loop integrals.
+
+Its checks come from the literature, starting with the second-order gluon mass term of [GR15] Eq. (C7). It needs a few decisions first, listed at the end of the plan.
