@@ -7,7 +7,7 @@ See [assessment.md](assessment.md) for the reasoning behind each item.
 2. **Packaging.** ✅ *Done (2026-10-26), see "Status" below.* Rename `src/` to `rgpep_dgt/` (or use the `src/rgpep_dgt/` layout), complete `pyproject.toml` with a build system and dependencies, and add `__init__` exports.
 3. **New core, in parallel with the old one.** ✅ *Done (2026-10-26), see "Status" below.* Add the theory DSL, the graph-based `Diagram`, a generator for contractions, and isomorphism dedup. Validate it against `tests/wick_reference.py` and the literature tests, then switch over. The generator must enumerate each ordered product of initial terms once, with every Wick contraction allowed by the bracketing rule of [docs/literature.md](literature.md). That is the only way to fix the remaining overcounting at order ≥ 3.
 4. **Physics features from `changes.txt`:** ✅ *Done (2026-10-26), see "Status" below.* kinetic-term / counterterm insertion (the commented-out blocks), a list of terms before contraction, correct counting and symmetry factors, and labelled in/out particles.
-5. **Higher orders and performance.** Prune unreachable branches, cache order-n results to disk (pickle or JSON), and optionally use multiprocessing across (A, B) pairs.
+5. **Higher orders and performance.** ✅ *Done (2026-10-26), see "Status" below.* Prune unreachable branches, cache order-n results to disk (pickle or JSON), and optionally use multiprocessing across (A, B) pairs.
 6. **Output and docs.** ✅ *Done (2026-10-26), see "Status" below.* Add TikZ export and an algebraic expression per diagram (operator string plus form-factor / energy-denominator structure). This is the step that makes the tool useful for actual RGPEP calculations. Also fill in the README (theory background, usage), CITATION.cff and docs, and add CI (GitHub Actions running pytest).
 
 ## Verification
@@ -76,3 +76,29 @@ Still open:
 - Motivation and theoretical background in the README are yours to write.
 - The coefficients B are given as labels. Evaluating them (the integrals of A over t) for given momenta would be the next step towards numbers.
 - Step 5 (performance) and removing the legacy engine.
+
+### Step 5 (2026-10-26)
+Benchmarks on 16 cores; the results are identical to before these changes in every case:
+
+| Case | Diagrams | Before step 5 | Now, 1 process | Now, 8 processes |
+|---|---|---|---|---|
+| φ⁴ 2→2, order 7 | 121,419 | 24.8 s | 11.3 s | 6.3 s |
+| φ⁴ 1→1, order 8 | 58,701 | 23.4 s | 11.7 s | 5.1 s |
+| φ⁴ 2→2, order 6 | 7,433 | 1.3 s | 0.6 s | |
+| QCD quark → quark + gluon, order 5 | 953 | 2.6 s | 2.3 s | 1.3 s |
+
+For comparison, the legacy engine needed 12 s for φ⁴ at fourth order.
+
+- **Pruning:** the enumeration keeps running totals of free and "locked" outgoing legs, and stops a branch as soon as the remaining incoming legs cannot bring the external lines to the process. Infeasible products of terms are skipped before any work.
+- **Cheaper bookkeeping:**
+  - plain recursion with a callback instead of nested generators;
+  - the Wick-count numerator is computed once per product;
+  - weights are computed once per diagram instead of per contraction;
+  - bracketing existence is a small table instead of memoised closures.
+- **Memory:** `Diagram` uses slots, and identical tuples are shared between diagrams. φ⁴ 2→2 at order 7 went from 514 MB to 373 MB.
+- **Parallel:** `generate_diagrams(..., workers=n)` (also in `term_products` and `calculate_diagrams`) splits the products of terms among processes; `workers=None` uses every CPU. Gains stop at about 2× around 8 processes, because the main process has to receive and merge every result. It only pays off for large orders.
+- **Disk cache:** `cache=True` (or a directory) stores results in `~/.cache/rgpep_dgt`. The key includes the theory, the process and the engine source, so changing any of them recomputes. Unreadable files are recomputed.
+
+Still open:
+- In parallel runs, transferring results between processes is the bottleneck. Returning compact arrays instead of tuples would help if larger orders are needed.
+- The legacy engine is still there for comparison and could be removed.

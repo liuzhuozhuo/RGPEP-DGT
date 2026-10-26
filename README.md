@@ -47,11 +47,20 @@ Each diagram is written as `f_t [sum of RGPEP coefficients B] (weight) (product 
 - **Counterterms.** `counterterms=True` adds mass and coupling-constant counterterms at every order where the theory has a loop correction to them.
 - **Weight.** The weight includes the normalisation of the terms. In φ⁴ that is 1/(k! l!) from φ⁴/4!, so weights reproduce the usual symmetry factors.
 
+### Large orders
+
+`generate_diagrams`, `term_products` and `calculate_diagrams` accept two options:
+- `workers=n` uses several processes, and `workers=None` uses one per CPU.
+- `cache=True` keeps the results in `~/.cache/rgpep_dgt` and reuses them. They are recomputed automatically when the theory, the process or the code changes.
+
+For example, φ⁴ 2→2 at seventh order (121,419 diagrams) takes about 11 s in one process and 6 s with 8.
+
 ## Project structure
 
 - `rgpep_dgt/engine/` generates the diagrams.
   - `theory.py`: theories as lists of Hamiltonian terms, and their counterterms.
   - `generate.py`: products of terms and their Wick contractions.
+  - `cache.py`: disk cache of generated diagrams.
   - `expressions.py`: diagrams as Hamiltonian terms, with RGPEP coefficients.
   - `arrays.py`: conversion to the arrays used for drawing.
 - `rgpep_dgt/can_diagrams/` holds the canonical (initial) Hamiltonian terms of each theory.
