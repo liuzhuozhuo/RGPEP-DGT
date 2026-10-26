@@ -183,7 +183,7 @@ def generate_diagrams(theory, order, n_in, n_out):
     All diagrams of a given order for the process with n_in incoming and n_out outgoing particles of each type.
 
     Args:
-        theory (Theory): the theory, see src/engine/theory.py
+        theory (Theory): the theory, see rgpep_dgt/engine/theory.py
         order (int): order in the coupling constant
         n_in, n_out (list or int): number of incoming/outgoing particles of each type (an int means the first type)
     Returns:

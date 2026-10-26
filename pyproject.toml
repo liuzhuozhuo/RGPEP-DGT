@@ -1,6 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
 name = "rgpep-dgt"
 version = "0.0.1"
 description = "RGPEP-DGT: Renormalization Group Procedure for Effective Particles - Diagram Generation Tool"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Zhuozhuo Liu" }]
+dependencies = [
+    "numpy",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+# Drawing with represent_order_diagram uses the feynman package; computing diagrams does not need it
+drawing = ["feynman"]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+include = ["rgpep_dgt*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

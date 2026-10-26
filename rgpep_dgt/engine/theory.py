@@ -53,7 +53,7 @@ class Theory:
 
 def term_from_arrays(points, connections, order, count=1, name=""):
     """
-    Build a Term from a canonical diagram in the array format of src/can_diagrams.
+    Build a Term from a canonical diagram in the array format of rgpep_dgt/can_diagrams.
 
     Points that are the end of only one line are external. A line whose left end (first column) is external is an
     outgoing leg, a line whose right end (second column) is external is an incoming leg, and lines between two
@@ -96,9 +96,9 @@ def theory_from_canonical(name, module, particle_types):
 
 # Theories available by name. The particle types follow the order used in the canonical diagram files.
 THEORIES = {
-    "phi4": ("src.can_diagrams.phi4.canonical_diagrams", ("phi", "unused")),
-    "qcd_gluons": ("src.can_diagrams.qcd.gluons.canonical_diagrams", ("gluon", "instantaneous")),
-    "qcd": ("src.can_diagrams.qcd.full_theory.canonical_diagrams", ("gluon", "instantaneous", "quark", "antiquark")),
+    "phi4": ("rgpep_dgt.can_diagrams.phi4.canonical_diagrams", ("phi", "unused")),
+    "qcd_gluons": ("rgpep_dgt.can_diagrams.qcd.gluons.canonical_diagrams", ("gluon", "instantaneous")),
+    "qcd": ("rgpep_dgt.can_diagrams.qcd.full_theory.canonical_diagrams", ("gluon", "instantaneous", "quark", "antiquark")),
 }
 
 

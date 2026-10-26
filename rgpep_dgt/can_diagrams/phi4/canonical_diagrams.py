@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.transforms.format import combine_connections # Used to combine different types of connections (particles) into a single array
+from rgpep_dgt.transforms.format import combine_connections # Used to combine different types of connections (particles) into a single array
 
 points_1 = np.array([[0, 1], [0, 3], [1, 2], [2, 1], [2, 3]])
 connection_1 = np.array([[[1, 3], [2, 3], [3, 4], [3, 5]], [[0, 0], [0, 0], [0, 0], [0, 0]]])

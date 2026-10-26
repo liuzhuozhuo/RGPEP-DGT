@@ -4,10 +4,10 @@ from math import comb, factorial
 import numpy as np
 import pytest
 
-from src.core.pipeline import calculate_diagrams
-from src.search.comparison import diagram_signature, group_diagrams
-from src.transforms.concatenation import get_all_pairings, make_connection, matches_process
-from src.transforms.simplify import simplify_diagram
+from rgpep_dgt.core.pipeline import calculate_diagrams
+from rgpep_dgt.search.comparison import diagram_signature, group_diagrams
+from rgpep_dgt.transforms.concatenation import get_all_pairings, make_connection, matches_process
+from rgpep_dgt.transforms.simplify import simplify_diagram
 
 
 @pytest.mark.parametrize("n_1, n_2", [(1, 1), (2, 3), (3, 3), (4, 2)])

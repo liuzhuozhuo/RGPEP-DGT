@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
 
-from src.transforms.format import *
-from src.search.comparison import find_equal_subarrays, find_equal_subarrays_3D
-from src.transforms.concatenation import in_out_connections, rearrange_in_out_points, equalize_x_spacing, find_loops, matches_process
+from rgpep_dgt.transforms.format import *
+from rgpep_dgt.search.comparison import find_equal_subarrays, find_equal_subarrays_3D
+from rgpep_dgt.transforms.concatenation import in_out_connections, rearrange_in_out_points, equalize_x_spacing, find_loops, matches_process
 
 def represent_diagram_as_png (points, connection, symmetry_num, colors, linestyles, show_index = True, directory = "", figsize_=(4,2)):
 

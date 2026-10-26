@@ -10,8 +10,8 @@ from collections import Counter
 import numpy as np
 import pytest
 
-from src.core.pipeline import calculate_diagrams
-from src.transforms.concatenation import in_out_connections
+from rgpep_dgt.core.pipeline import calculate_diagrams
+from rgpep_dgt.transforms.concatenation import in_out_connections
 from wick_reference import PHI4_VERTICES, rgpep_diagrams
 
 
@@ -25,7 +25,7 @@ def counts(theory, in_particles, out_particles, order, engine):
 
 def reference_signature(points, connections):
     """
-    Signature of a phi^4 diagram from src/ in the format of wick_reference: lines between vertices labelled by
+    Signature of a phi^4 diagram from rgpep_dgt/ in the format of wick_reference: lines between vertices labelled by
     their position in the product, and (outgoing, incoming) external lines of each vertex.
     """
     lines = [(int(a), int(b)) for a, b in connections[0] if a != 0 or b != 0]
@@ -76,7 +76,7 @@ def test_gluon_self_energy_second_order(engine):
 @pytest.mark.parametrize("engine", ENGINES)
 def test_gluon_2_to_2_second_order(engine):
     # (a+a+a)(a+aa): 1 contraction, 1 way. (a+aa)(a+a+a): 1 contraction, 2*2 ways. The other two are the
-    # instantaneous terms of the canonical Hamiltonian as drawn in src/can_diagrams/qcd/gluons: 1 s-channel
+    # instantaneous terms of the canonical Hamiltonian as drawn in rgpep_dgt/can_diagrams/qcd/gluons: 1 s-channel
     # diagram and 4 t-channel diagrams that only differ by the labels of the external gluons.
     assert counts("qcd_gluons", [2, 0], [2, 0], 2, engine) == [1, 1, 4, 4]
 

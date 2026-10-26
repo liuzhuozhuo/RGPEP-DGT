@@ -1,8 +1,8 @@
 import numpy as np
 
-from src.transforms.format import trim_zeros_3D, trim_zeros_2D
-from src.search.comparison import unique_values
-from src.transforms.simplify import simplify_diagram
+from rgpep_dgt.transforms.format import trim_zeros_3D, trim_zeros_2D
+from rgpep_dgt.search.comparison import unique_values
+from rgpep_dgt.transforms.simplify import simplify_diagram
 
 def in_out_connections (connections):
     max_len = max([len(path) for path in connections])
@@ -204,15 +204,15 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
 
     if theory == "phi4":
         # 
-        from src.can_diagrams.phi4.canonical_diagrams import can_points, can_connections, can_count
+        from rgpep_dgt.can_diagrams.phi4.canonical_diagrams import can_points, can_connections, can_count
 
     elif theory == "qcd":
         # Import the canonical diagrams for QCD
-        from src.can_diagrams.qcd.full_theory.canonical_diagrams import can_points, can_connections, can_count
+        from rgpep_dgt.can_diagrams.qcd.full_theory.canonical_diagrams import can_points, can_connections, can_count
 
     elif theory == "qcd_gluons":
         # 
-        from src.can_diagrams.qcd.gluons.canonical_diagrams import can_points, can_connections, can_count
+        from rgpep_dgt.can_diagrams.qcd.gluons.canonical_diagrams import can_points, can_connections, can_count
     else:
         raise ValueError(f"Unknown theory: {theory}")
 

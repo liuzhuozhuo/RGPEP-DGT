@@ -1,7 +1,7 @@
 """
 Independent brute-force reference for the RGPEP operator structures of a theory with one type of particle.
 
-It does not use any code from src/, so it can be used to check the diagram generation. The rules come from
+It does not use any code from rgpep_dgt/, so it can be used to check the diagram generation. The rules come from
 Glazek, Acta Phys. Pol. B 43, 1843 (2012), arXiv:1204.4760 (see docs/literature.md):
 
 1. The term of order n is a sum over ordered products of n first-order terms, each ordered product appearing

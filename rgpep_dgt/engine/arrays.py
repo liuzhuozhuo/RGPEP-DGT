@@ -1,13 +1,13 @@
 """
-Conversion between the diagrams of src/engine and the arrays used by the rest of the code (points of dimension
+Conversion between the diagrams of rgpep_dgt/engine and the arrays used by the rest of the code (points of dimension
 (P, 2) and connections of dimension (n_types, M, 2) with 1-based point indices), so that the renderer can be used.
 """
 from collections import Counter
 
 import numpy as np
 
-from src.engine.theory import term_from_arrays
-from src.transforms.concatenation import stack_diagrams
+from rgpep_dgt.engine.theory import term_from_arrays
+from rgpep_dgt.transforms.concatenation import stack_diagrams
 
 
 def layout(n_vertices, lines, external, n_types):
@@ -74,7 +74,7 @@ def stack(diagrams, n_types):
 
 
 def key_from_arrays(points, connections):
-    """The key (n_vertices, lines, external) of src.engine.generate.Diagram for a diagram given as arrays."""
+    """The key (n_vertices, lines, external) of rgpep_dgt.engine.generate.Diagram for a diagram given as arrays."""
     term = term_from_arrays(points, connections, order=0)
     lines = Counter(term.lines)
     external = [(v, t, "out", out[t]) for v, (out, _) in enumerate(term.legs) for t in range(len(out)) if out[t]]

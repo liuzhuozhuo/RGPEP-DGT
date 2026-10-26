@@ -4,7 +4,7 @@ See [assessment.md](assessment.md) for the reasoning behind each item.
 
 ## Steps (in priority order)
 1. **Safety net first.** ✅ *Done (2026-10-26), see "Status" below.* Add `pytest` tests that pin down known results, such as diagram counts for φ⁴ 1→1, 2→2 and 1→3 at orders 2–3, and Głazek's known O(g²) QCD terms. Fix bugs 1, 6, 7 and 8. Remove the committed `.pyc` files (`git rm --cached`), and strip notebook outputs (`nbstripout`).
-2. **Packaging.** Rename `src/` to `rgpep_dgt/` (or use the `src/rgpep_dgt/` layout), complete `pyproject.toml` with a build system and dependencies, and add `__init__` exports.
+2. **Packaging.** ✅ *Done (2026-10-26), see "Status" below.* Rename `src/` to `rgpep_dgt/` (or use the `src/rgpep_dgt/` layout), complete `pyproject.toml` with a build system and dependencies, and add `__init__` exports.
 3. **New core, in parallel with the old one.** ✅ *Done (2026-10-26), see "Status" below.* Add the theory DSL, the graph-based `Diagram`, a generator for contractions, and isomorphism dedup. Validate it against `tests/wick_reference.py` and the literature tests, then switch over. The generator must enumerate each ordered product of initial terms once, with every Wick contraction allowed by the bracketing rule of [docs/literature.md](literature.md). That is the only way to fix the remaining overcounting at order ≥ 3.
 4. **Physics features from `changes.txt`:** kinetic-term / counterterm insertion (the commented-out blocks), a list of terms before contraction, correct counting and symmetry factors, and labelled in/out particles.
 5. **Higher orders and performance.** Prune unreachable branches, cache order-n results to disk (pickle or JSON), and optionally use multiprocessing across (A, B) pairs.
@@ -36,8 +36,8 @@ Still open:
 - No counterterms (mass, vertex) yet, cf. [GR15] Fig. 7 (f), (i), (j).
 
 ### Step 3 (2026-10-26)
-New engine in `src/engine/`, used by default (`calculate_diagrams(..., engine="new")`; `engine="legacy"` keeps the old code).
-- **`theory.py`:** a theory is a list of `Term`s (vertices in order, legs per particle type, internal lines such as the instantaneous line). Terms are read automatically from the existing `src/can_diagrams` files, so nothing was retyped.
+New engine in `rgpep_dgt/engine/`, used by default (`calculate_diagrams(..., engine="new")`; `engine="legacy"` keeps the old code).
+- **`theory.py`:** a theory is a list of `Term`s (vertices in order, legs per particle type, internal lines such as the instantaneous line). Terms are read automatically from the existing `rgpep_dgt/can_diagrams` files, so nothing was retyped.
 - **`generate.py`:** every ordered product of terms is considered once. Contractions are enumerated as numbers of lines between pairs of vertices, and `wick_count` gives the number of Wick contractions for each. Patterns are kept only if they have an RGPEP bracketing. Products that cannot give the process are skipped early (leg-number balance, first/last factor legs, running totals).
 - **`arrays.py`:** conversion to and from the array format, so the existing renderer and notebooks work unchanged.
 - **Isomorphism:** no graph-isomorphism library was needed. Vertices are totally ordered by their position in the product, so labelling them by position gives a canonical form. The only remaining symmetry is relabelling external legs, which the count accounts for.
@@ -49,3 +49,10 @@ Still open:
 - The automatic drawing layout is basic: lines can overlap for some diagrams (step 6).
 - Framework mode at seventh order still enumerates every contraction (~20 s for φ⁴ 2→2); it could stop at the first valid one (step 5).
 - The legacy engine can be removed once the notebooks have been checked with the new one.
+
+### Step 2 (2026-10-26)
+- **Rename:** `src/` became `rgpep_dgt/` (history kept with `git mv`), and all imports, notebooks and docs were updated. `__init__.py` was added to `can_diagrams/` and `can_diagrams/qcd/`, which had none, so the theory files are included when installed.
+- **`pyproject.toml`:** has a setuptools build system, dependencies (numpy, matplotlib), and optional extras `drawing` (feynman) and `test` (pytest). Installs with `pip install -e .`.
+- **Exports:** `rgpep_dgt/__init__.py` exports `calculate_diagrams`, `represent_order_diagram`, `get_theory`, `generate_diagrams`, `term_products`, `Theory`, `Term` and `Diagram`. The notebooks import from the package.
+- **README:** installation, usage, project structure, dependencies and tests are filled in. Motivation and theoretical background are still to be written.
+- **Checked:** the wheel contains every subpackage, and the installed package runs from outside the repository. All tests pass and both notebooks run.

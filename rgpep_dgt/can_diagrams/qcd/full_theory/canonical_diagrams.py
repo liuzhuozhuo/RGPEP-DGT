@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.transforms.format import combine_connections # Used to combine different types of connections (particles) into a single array
+from rgpep_dgt.transforms.format import combine_connections # Used to combine different types of connections (particles) into a single array
 
 """
 First order

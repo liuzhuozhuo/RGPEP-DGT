@@ -1,4 +1,4 @@
-"""Tests of the new engine in src/engine."""
+"""Tests of the new engine in rgpep_dgt/engine."""
 from collections import Counter
 from itertools import product
 from math import factorial
@@ -6,10 +6,10 @@ from math import factorial
 import numpy as np
 import pytest
 
-from src.core.pipeline import calculate_diagrams
-from src.engine.arrays import diagram_to_arrays, key_from_arrays
-from src.engine.generate import bracketings, generate_diagrams, term_products, wick_count
-from src.engine.theory import get_theory
+from rgpep_dgt.core.pipeline import calculate_diagrams
+from rgpep_dgt.engine.arrays import diagram_to_arrays, key_from_arrays
+from rgpep_dgt.engine.generate import bracketings, generate_diagrams, term_products, wick_count
+from rgpep_dgt.engine.theory import get_theory
 
 
 def test_phi4_terms_read_from_canonical_diagrams():

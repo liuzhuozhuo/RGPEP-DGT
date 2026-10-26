@@ -1,9 +1,9 @@
 import numpy as np
 
-from src.search.comparison import group_diagrams
-from src.transforms.concatenation import combine_diagrams_order, return_diagram_framewok, in_out_connections
+from rgpep_dgt.search.comparison import group_diagrams
+from rgpep_dgt.transforms.concatenation import combine_diagrams_order, return_diagram_framewok, in_out_connections
 
-from src.rendering.matplotlib_backend import *  # Import the file that renders the diagrams using matplotlib
+from rgpep_dgt.rendering.matplotlib_backend import *  # Import the file that renders the diagrams using matplotlib
 
 def calculate_diagrams(theory, in_particles, out_particles, till_order, mode = "complete", engine = "new"):
     """
@@ -11,11 +11,11 @@ def calculate_diagrams(theory, in_particles, out_particles, till_order, mode = "
     (numbers for each type of particle, or an int for theories with one type).
 
     mode = "complete" returns (points, connections, count, diagrams): every diagram with the number of Wick
-        contractions that give it. With engine="new", diagrams is the list of src.engine.generate.Diagram.
+        contractions that give it. With engine="new", diagrams is the list of rgpep_dgt.engine.generate.Diagram.
     mode = "framework" returns (points, paths, 0, products): the products of canonical terms that contribute,
         drawn without contractions. With engine="new", products maps each sequence of term indices to its count.
 
-    engine = "new" uses src/engine, which follows docs/literature.md and counts each contraction once.
+    engine = "new" uses rgpep_dgt/engine, which follows docs/literature.md and counts each contraction once.
     engine = "legacy" uses the original iterative construction, which overcounts from third order on.
     """
     if isinstance(in_particles, int):
@@ -24,10 +24,10 @@ def calculate_diagrams(theory, in_particles, out_particles, till_order, mode = "
         out_particles = [out_particles, 0]
 
     if engine == "new":
-        from src.engine.theory import get_theory
-        from src.engine.generate import generate_diagrams, term_products
-        from src.engine.arrays import stack, product_to_arrays
-        from src.transforms.concatenation import stack_diagrams
+        from rgpep_dgt.engine.theory import get_theory
+        from rgpep_dgt.engine.generate import generate_diagrams, term_products
+        from rgpep_dgt.engine.arrays import stack, product_to_arrays
+        from rgpep_dgt.transforms.concatenation import stack_diagrams
 
         rgpep_theory = get_theory(theory)
         if mode == "complete":
@@ -45,15 +45,15 @@ def calculate_diagrams(theory, in_particles, out_particles, till_order, mode = "
 
     if theory == "phi4":
         # 
-        from src.can_diagrams.phi4.canonical_diagrams import can_points, can_connections, can_count
+        from rgpep_dgt.can_diagrams.phi4.canonical_diagrams import can_points, can_connections, can_count
 
     elif theory == "qcd":
         # Import the canonical diagrams for QCD
-        from src.can_diagrams.qcd.full_theory.canonical_diagrams import can_points, can_connections, can_count
+        from rgpep_dgt.can_diagrams.qcd.full_theory.canonical_diagrams import can_points, can_connections, can_count
 
     elif theory == "qcd_gluons":
         # 
-        from src.can_diagrams.qcd.gluons.canonical_diagrams import can_points, can_connections, can_count
+        from rgpep_dgt.can_diagrams.qcd.gluons.canonical_diagrams import can_points, can_connections, can_count
         pass
     else:
         raise ValueError(f"Unknown theory: {theory}")

@@ -21,7 +21,7 @@ This page lists the results from the literature that the tests in `tests/` rely 
 
    Together with the recursion G′ₙ = Σₖ A Gₖ Gₙ₋ₖ ([G12] Eq. (24)), a contraction pattern of an ordered product is kept if the factors can be split recursively into two contiguous groups with at least one contraction across every split. At third order this is the same as "connected". From fourth order on it is stricter: for example, contractions 1–3, 1–4 and 2–4 only are connected but are not produced.
 4. **Different bracketings give one operator with summed coefficients.** A pattern reachable through several bracketings is one operator structure with a summed coefficient, e.g. [B⁽¹²⁴⁾ + B⁽¹³⁴⁾] G₀₃axyb in [G12] Eq. (31). It must be counted once.
-5. **The front form has no vacuum terms.** Terms with only creation or only annihilation operators vanish because p⁺ > 0. So φ⁴ has only a†a†aa, a†a†a†a and a†aaa, and the gluon 3-vertex has only a†a†a and a†aa. This matches `src/can_diagrams`.
+5. **The front form has no vacuum terms.** Terms with only creation or only annihilation operators vanish because p⁺ > 0. So φ⁴ has only a†a†aa, a†a†a†a and a†aaa, and the gluon 3-vertex has only a†a†a and a†aa. This matches `rgpep_dgt/can_diagrams`.
 
 The **count** of a diagram is the number of Wick contractions, summed over ordered products, that give that diagram.
 
@@ -55,7 +55,7 @@ Everything else is computed by the brute-force reference in `tests/wick_referenc
 
 ## Status of the engines
 
-- **`engine="new"` (default, `src/engine/`).** Implements rules 1–5 directly. It agrees with the brute-force reference (diagrams *and* counts) for φ⁴ up to fourth order. It agrees exactly with the legacy engine at second order for gluons and QCD, and produces the [GR15] Fig. 7 diagram set.
+- **`engine="new"` (default, `rgpep_dgt/engine/`).** Implements rules 1–5 directly. It agrees with the brute-force reference (diagrams *and* counts) for φ⁴ up to fourth order. It agrees exactly with the legacy engine at second order for gluons and QCD, and produces the [GR15] Fig. 7 diagram set.
 - **`engine="legacy"`.** Finds the same diagrams, but from third order on it counts a contraction once for every bracketing that reaches it (rule 4 is violated): a factor 2 at third order and up to 4 at fourth order. The tests that show this are marked `xfail(strict=True)`.
 
 Each diagram of the new engine also records its `bracketings`: the ways the product is built from products of two factors. These say which RGPEP coefficients multiply the diagram. For example, a third-order pattern with contractions 0–2 and 1–2 only comes from the bracketing (0, (1, 2)), i.e. only the coefficient B⁽¹²⁴⁾ of [G12] Eq. (31) contributes.
