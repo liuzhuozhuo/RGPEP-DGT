@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.special import binom, factorial
 
 from src.transforms.format import trim_zeros_3D, trim_zeros_2D
 from src.search.comparison import unique_values
@@ -69,7 +68,7 @@ def how_connected(max_connections, n_connections, n_1, n_2):
     else:
         return combinations
     
-from itertools import combinations, permutations
+from itertools import combinations, permutations, product
 def get_all_pairings(n_1, n_2):
     """
     Returns all possible connection configurations between set 1 (1..n_1)
@@ -98,7 +97,7 @@ def get_all_pairings(n_1, n_2):
 
     return np.array(all_configs)
     
-def make_connection (points1, connections1, points2, connections2, order, offset = 0):
+def make_connection (points1, connections1, points2, connections2, offset = 0):
     in_out_connections1 = in_out_connections(connections1)
     in_out_connections2 = in_out_connections(connections2)
 
@@ -128,80 +127,27 @@ def make_connection (points1, connections1, points2, connections2, order, offset
     for i in range(n_types):
         max_connections[i] = min(n1[i], n2[i])
 
-    #n_connections indicates the number of connections between the two diagrams taking into account the number of types of particles
-    n_connections = np.zeros(n_types, dtype=int)
-    for j in range(n_types):
-        for i in range(int(max_connections[j])):
-            n_connections[j] += int(binom(n1[j], i+1)*binom(n2[j], i+1) * factorial(i+1))
-    
-    #n_connec indicates the total number of connections between the two diagrams
-    n_connec = 0
-    for subset in range(1, 1 << n_types):
-        product = 1
-        for i in range(n_types):
-            if subset & (1 << i):
-                product *= n_connections[i]
-        n_connec += product
-
-    #Use a dummy array to store all possible combinations of connections for each type of particle between the two diagrams
-    dummy_combinations = np.zeros((int(sum(n_connections)*((order+1)/2)), n_types,  max(max_connections), 2), dtype=int)
-    n = 0
+    #For each type of particle, list every way of connecting its lines between the two diagrams (Wick contractions),
+    #including the empty one where no line of that type is connected
+    pairings_per_type = []
     for i in range(n_types):
-        dummy_var = get_all_pairings(n1[i], n2[i])
-        for j in range(n_connections[i]):
-            for k in range(max_connections[i]):
-                if(dummy_var[j, k, 0] != 0 and dummy_var[j, k, 1] != 0):
-                    dummy_combinations[n, i, k] = dummy_var[j, k]
-                else:
-                    break
-            n+=1
+        pairings = [np.zeros((0, 2), dtype=int)]
+        if max_connections[i] > 0:
+            pairings += [pairing[np.any(pairing != 0, axis=1)] for pairing in get_all_pairings(n1[i], n2[i])]
+        pairings_per_type.append(pairings)
 
-    #From the dummy array, create the array combinations that will store all possible combinations of connections between the two diagrams
-    #taking into account mixing different types of particles
-    combinations = np.zeros((n_connec, n_types, max(max_connections), 2), dtype=int)
+    #A combination picks one pairing for each type of particle, so any number of types can be mixed. The combination
+    #where nothing is connected is dropped, since the product of two Hamiltonian terms needs at least one contraction.
+    combinations = [combination for combination in product(*pairings_per_type) if any(len(pairing) for pairing in combination)]
+    n_connec = len(combinations)
 
-    #The first step is to store a copy of the dummy array in the combinations array, without considering the mixing of different 
-    #types of particles since there will be diagrams without mixed particles.
-    n = 0
-    for i in range(n_types):
-        if (n_connections[i] == 0):
-            continue
-        for j in range(np.sum(n_connections[:i]), n_connections[i]+np.sum(n_connections[:i])):
-            for k in range(max_connections[i]):
-                if(dummy_combinations[j, i, k, 0] != 0 and dummy_combinations[j, i, k, 1] != 0):
-                    combinations[n, i, k] = dummy_combinations[j, i, k]
-                else:
-                    break
-            n+=1        
-
-    #The second step is to store the combinations of connections between the two diagrams taking into account the mixing of 
-    #different types of particles. The process could be though as filling a tringular matrix with the combinations of connections
-    #between the two diagrams. The first row of the matrix corresponds to the one type case, the second row combining 2 elements of 
-    #the first row, this means combining 2 types of particles, and so on.
-
-    #The variable n_start indicates the position in the combinations array where the combinations of connections between 
-    #the two diagrams taking into account the mixing of different types of particles start.
-    n_start = n
-
-    n_prime = 0
-    for i in range(n_types-1):
-        leng = 0
-        for l in range(i+1, n_types):   
-            leng += n_connections[i]*n_connections[l]
-        for n in range(n_start, leng+n_start):
-            combinations[n, i] = dummy_combinations[n_prime, i]
-            for j in range(i+1, n_types):
-                combinations[n, j] = dummy_combinations[n-n_start+n_connections[i], j]
-        if leng > 0:
-            n_prime += 1    
     #Create the connections array that will store the connections between the two diagrams.
-    connections = np.zeros((n_connec, n_types, len(connections1[0]) + len(connections2[0]) + max(max_connections), 2), dtype=int)
+    connections = np.zeros((n_connec, n_types, len(connections1[0]) + len(connections2[0]) + max(max_connections, default=0), 2), dtype=int)
     connections[:n_connec,:n_types,:len(connections1[0])] = connections1
     for i in range(n_connec):
         for j in range(n_types):
-            for k in range(max_connections[j]):
-                if (combinations[i,j, k, 0] != 0 and combinations[i,j, k, 1] != 0):
-                    connections[i,j, len(connections1[0])+k] = np.array([in_out_connections1[j,0, combinations[i, j, k, 0]-1], in_out_connections2[j,1, combinations[i, j, k, 1]-1]])
+            for k, (in_index, out_index) in enumerate(combinations[i][j]):
+                connections[i,j, len(connections1[0])+k] = np.array([in_out_connections1[j,0, in_index-1], in_out_connections2[j,1, out_index-1]])
             if (np.count_nonzero(connections2[j]) != 0):
                 for k in range(len(connections2[j])):
                     if (connections2[j, k, 0] != 0 and connections2[j, k, 1] != 0):
@@ -210,10 +156,50 @@ def make_connection (points1, connections1, points2, connections2, order, offset
     return points, connections
 
 
+def matches_process(connections, typeofproc):
+    """
+    Check if a diagram has, for every type of particle, the number of incoming and outgoing lines asked for.
+    Args:
+        connections (np.array): connections of the diagram, of dimension (n_types, n_lines, 2)
+        typeofproc (list): [in_particles, out_particles], each a list with the number of particles of each type.
+            Types missing from the lists are taken to have 0 particles.
+    Returns:
+        bool: True if the diagram corresponds to the process
+    """
+    in_out_path = in_out_connections(connections)
+    for i in range(len(connections)):
+        n_in = typeofproc[0][i] if i < len(typeofproc[0]) else 0
+        n_out = typeofproc[1][i] if i < len(typeofproc[1]) else 0
+        if len(np.trim_zeros(in_out_path[i, 0])) != n_in or len(np.trim_zeros(in_out_path[i, 1])) != n_out:
+            return False
+    return True
+
+def stack_diagrams(diagrams, n_types):
+    """
+    Stack a list of diagrams of different sizes into zero padded arrays.
+    Args:
+        diagrams (list): list of (points, connections, count)
+        n_types (int): number of types of particles
+    Returns:
+        new_points (np.array): of dimension (N, max number of points, 2)
+        new_connections (np.array): of dimension (N, n_types, max number of lines, 2)
+        new_count (np.array): of dimension (N, 1)
+    """
+    max_points = max((len(diagram_points) for diagram_points, _, _ in diagrams), default=1)
+    max_lines = max((diagram_connections.shape[1] for _, diagram_connections, _ in diagrams), default=1)
+    new_points = np.zeros((len(diagrams), max_points, 2))
+    new_connections = np.zeros((len(diagrams), n_types, max_lines, 2), dtype=int)
+    new_count = np.zeros((len(diagrams), 1), dtype=int)
+    for n, (diagram_points, diagram_connections, diagram_count) in enumerate(diagrams):
+        new_points[n, :len(diagram_points)] = diagram_points
+        new_connections[n, :, :diagram_connections.shape[1]] = diagram_connections
+        new_count[n] = np.ravel(diagram_count)[0]
+    return new_points, new_connections, new_count
+
 def combine_diagrams_order (points, connections, count, typeofproc, max_order, offset = 0, theory = "qcd"):
     """
     Combine all the diagrams that would contribute to a give order, and type of interaction. If the order that is calculating is 
-    the max_order intended, then it will try to skip products that definitely do not contribute.
+    the max_order intended, then only the diagrams of the process typeofproc are kept.
     """
 
     if theory == "phi4":
@@ -230,120 +216,38 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
     else:
         raise ValueError(f"Unknown theory: {theory}")
 
-    #Similar to the one type of particle case, we need to first approximate the number of new diagrams that will produce.
     curr_order = len(points)
     n_types = len(connections[0][0])
-    max_points = np.zeros((n_types, 2), dtype=int)
+    #Only the diagrams of the last order are filtered by process, the lower orders are needed to build the higher ones
+    process = typeofproc if curr_order+1 == max_order else None
 
-    n1 = np.zeros(n_types, dtype=int)
-    n2 = np.zeros(n_types, dtype=int)
-    for i in range(len(connections[0])): #in number of first order diagrams
-        for j in range(n_types):
-            n1[j] = len(np.trim_zeros(in_out_connections(connections[0][i])[j, 0]))
-            if (n1[j] > max_points[j, 0]):
-                max_points[j, 0] = n1[j]
-            n2[j] = len(np.trim_zeros(in_out_connections(connections[0][i])[j, 1]))
-            if (n2[j] > max_points[j, 1]):
-                max_points[j, 1] = n2[j]            
-    for i in range(len(connections[-1])):
-        for j in range(n_types):
-            n1[j] = len(np.trim_zeros(in_out_connections(connections[-1][i])[j, 0]))
-            if (n1[j] > max_points[j, 0]):
-                max_points[j, 0] = n1[j]
-            n2[j] = len(np.trim_zeros(in_out_connections(connections[-1][i])[j, 1]))
-            if (n2[j] > max_points[j, 1]):
-                max_points[j, 1] = n2[j]
+    new_diagrams = [] #List of (points, connections, count) of the new diagrams, stacked into arrays at the end
 
-    max_connections = np.zeros(n_types, dtype=int)
-    for i in range(n_types):
-        max_connections[i] = min(max_points[i, 0], max_points[i, 1])
-
-    n_connec = 0
-    n_connections = np.zeros(n_types, dtype=int)
-    for i in range(len(connections[0])):
-        for j in range(n_types):
-            for k in range(int(max_connections[j])):
-                n_connections[j] += int(binom(n1[j], i+1)*binom(n2[j], k+1) * factorial(k+1))
-        #n_connec indicates the total number of connections between the two diagrams
-        for subset in range(1, 1 << n_types):
-            product = 1
-            for i in range(n_types):
-                if subset & (1 << k):
-                    product *= n_connections[k]
-            n_connec += product
-
-    n = 0 #This variable will be used to fill the new_points, new_connections and new_count arrays
-
-    new_points = np.zeros((4*n_types*len(connections[0])*len(connections[-1])*n_connec*(curr_order+1), len(points[0][0]) + len(points[-1][0]), 2))
-    new_connections = np.zeros((4*n_types*len(connections[0])*len(connections[-1])*n_connec*(curr_order+1), n_types, len(connections[0][0]) + len(connections[-1][0])+np.max(max_connections)+5, 2), dtype=int)
-    new_count = np.zeros((4*n_types*len(connections[0])*len(connections[-1])*n_connec*(curr_order+1), 1), dtype=int)
+    def add_products(points1, connections1, points2, connections2, count_):
+        """Add every diagram obtained by connecting diagram 1 (left) with diagram 2 (right)."""
+        dummy_points, dummy_connections = make_connection(trim_zeros_2D(points1), trim_zeros_3D(connections1, axis=1), trim_zeros_2D(points2), trim_zeros_3D(connections2, axis=1), offset=offset)
+        for dummy_connection in dummy_connections:
+            if process is not None and not matches_process(dummy_connection, process):
+                continue
+            simp_points, simp_connections = simplify_diagram(dummy_points, trim_zeros_3D(dummy_connection, axis=1))
+            new_diagrams.append((simp_points, simp_connections, count_))
 
     for i in range(len(connections[0])):
         for j in range(len(connections[-1])):
-            dummy_points, dummy_connections = make_connection(trim_zeros_2D(points[-1][j]), trim_zeros_3D(connections[-1][j], axis = 1),trim_zeros_2D(points[0][i]), trim_zeros_3D(connections[0][i], axis=1), order=curr_order, offset=offset)
-            for k in range(len(dummy_connections)):
-                if(curr_order+1  == max_order): 
-                    in_out_path = in_out_connections(dummy_connections[k])
-                    if (len(np.trim_zeros(in_out_path[0, 0])) != typeofproc[0][1] or len(np.trim_zeros(in_out_path[0, 1]))!= typeofproc[0][0]):
-                        continue
-                simp_points, simp_connections = simplify_diagram(dummy_points, trim_zeros_3D(dummy_connections[k], axis=1))
-                for l in range(len(simp_points)):
-                    new_points[n, l] = simp_points[l]
-                for l in range(n_types):
-                    for m in range(len(simp_connections[0])):
-                        new_connections[n, l, m] = simp_connections[l, m]
-                new_count[n] = count[0][i] * count[-1][j]
-                n += 1
-            if (curr_order-1 < len(can_connections)):
-                dummy_points, dummy_connections = make_connection(trim_zeros_2D(points[0][i]), trim_zeros_3D(connections[0][i], axis=1),trim_zeros_2D(points[-1][j]), trim_zeros_3D(connections[-1][j], axis = 1), order=curr_order, offset=offset)
-                for k in range(len(dummy_connections)):
-                    if(curr_order+1  == max_order): 
-                        in_out_path = in_out_connections(dummy_connections[k])
-                        if (len(np.trim_zeros(in_out_path[0, 0])) != typeofproc[0][1] or len(np.trim_zeros(in_out_path[0, 1]))!= typeofproc[0][0]):
-                            continue
-                    simp_points, simp_connections = simplify_diagram(dummy_points, trim_zeros_3D(dummy_connections[k], axis=1))
-                    for l in range(len(simp_points)):
-                        new_points[n, l] = simp_points[l]
-                    for l in range(n_types):
-                        for m in range(len(simp_connections[0])):
-                            new_connections[n, l, m] = simp_connections[l, m]
-                    new_count[n] = count[0][i] * count[-1][j]
-                    n += 1
+            add_products(points[-1][j], connections[-1][j], points[0][i], connections[0][i], count[0][i] * count[-1][j])
+            #For curr_order = 1 the loop above already gives every ordered pair of first order diagrams,
+            #so the reversed product would count each of them twice
+            if curr_order > 1:
+                add_products(points[0][i], connections[0][i], points[-1][j], connections[-1][j], count[0][i] * count[-1][j])
     for i in range(1, len(can_connections)):
         for j in range(i-1, len(connections)):
             if (i+1 + j) == curr_order:
                 for k in range(len(can_connections[i])):
                     for l in range(len(connections[j])):
-                        dummy_points, dummy_connections = make_connection(trim_zeros_2D(can_points[i][k]), trim_zeros_3D(can_connections[i][k], axis=1), trim_zeros_2D(points[j][l]), trim_zeros_3D(connections[j][l], axis = 1), order=curr_order, offset=offset)
-                        for m in range(len(dummy_connections)):
-                            if(curr_order+1  == max_order): 
-                                in_out_path = in_out_connections(dummy_connections[m])
-                                if (len(np.trim_zeros(in_out_path[0, 0])) != typeofproc[0][0] or len(np.trim_zeros(in_out_path[0, 1]))!= typeofproc[0][1]):
-                                    continue
-                            simp_points, simp_connections = simplify_diagram(dummy_points, trim_zeros_3D(dummy_connections[m], axis=1))
-                            for o in range(len(simp_points)):
-                                new_points[n, o] = simp_points[o]
-                            for o in range(n_types):
-                                for p in range(len(simp_connections[0])):
-                                    new_connections[n, o, p] = simp_connections[o, p]
-                            new_count[n] = can_count[i][k] * count[j][l]        
-                            n += 1
+                        add_products(can_points[i][k], can_connections[i][k], points[j][l], connections[j][l], can_count[i][k] * count[j][l])
                 for k in range(len(can_connections[i])):
                     for l in range(len(connections[j])):
-                        dummy_points, dummy_connections = make_connection(trim_zeros_2D(points[j][l]), trim_zeros_3D(connections[j][l], axis=1), trim_zeros_2D(can_points[i][k]), trim_zeros_3D(can_connections[i][k], axis = 1), order=curr_order, offset=offset)
-                        for m in range(len(dummy_connections)):
-                            if(curr_order+1  == max_order): 
-                                in_out_path = in_out_connections(dummy_connections[m])
-                                if (len(np.trim_zeros(in_out_path[0, 0])) != typeofproc[0][0] or len(np.trim_zeros(in_out_path[0, 1]))!= typeofproc[0][1]):
-                                    continue
-                            simp_points, simp_connections = simplify_diagram(dummy_points, trim_zeros_3D(dummy_connections[m], axis=1))
-                            for o in range(len(simp_points)):
-                                new_points[n, o] = simp_points[o]
-                            for o in range(n_types):
-                                for p in range(len(simp_connections[0])):
-                                    new_connections[n, o, p] = simp_connections[o, p]
-                            new_count[n] = can_count[i][k] * count[j][l] 
-                            n += 1
+                        add_products(points[j][l], connections[j][l], can_points[i][k], can_connections[i][k], can_count[i][k] * count[j][l])
 
     """for i in range(len(counter_points)):
         for j in range(i, len(connections)):
@@ -386,13 +290,9 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
     #there are higher order canonical diagrams.
     if curr_order < len(can_connections):
         for i in range(len(can_points[curr_order])):
-            for j in range(len(can_points[curr_order][i])):
-                new_points[n, j] = can_points[curr_order][i][j]
-            for j in range(n_types):
-                for k in range(len(can_connections[curr_order][i][j])):
-                    new_connections[n, j, k] = can_connections[curr_order][i][j][k]
-            new_count[n] = can_count[curr_order][i][0]
-            n += 1
+            if process is not None and not matches_process(can_connections[curr_order][i], process):
+                continue
+            new_diagrams.append((can_points[curr_order][i], can_connections[curr_order][i], can_count[curr_order][i][0]))
     
     """if curr_order < len(counter_points):
         for i in range(len(counter_points[curr_order-1])):
@@ -407,7 +307,7 @@ def combine_diagrams_order (points, connections, count, typeofproc, max_order, o
             new_count[n] = 0
             n += 1
     """
-    return new_points, new_connections, new_count
+    return stack_diagrams(new_diagrams, n_types)
 
 def equalize_x_spacing(points: np.ndarray, spacing: float = 1) -> np.ndarray:
     """
@@ -546,17 +446,26 @@ def find_loops (points, connections, min_loop_len=3):
 
 
 def new_in_out_array(in_out_1, in_out_2):
+    """
+    Possible numbers of incoming and outgoing lines of each type of particle after connecting diagram 1 (left)
+    with diagram 2 (right). For each type, j lines are connected, from 0 up to the number of incoming lines of
+    diagram 1 or outgoing lines of diagram 2. The number is chosen independently for each type, but at least one
+    line has to be connected.
+    Args:
+        in_out_1, in_out_2: [number of incoming, number of outgoing] lines for each type of particle
+    Returns:
+        new_in_out (np.array): of dimension (number of possibilities, number of types, 2)
+    """
     in_out_1 = np.array(in_out_1)
     in_out_2 = np.array(in_out_2)
 
-    dim = min(np.max(in_out_2[:, 1]), np.max(in_out_1[:, 0]))
-    new_in_out = np.zeros((dim,len(in_out_1) ,2), dtype=int)
-    for i in range(len(in_out_1)):
-        for j in range(1, min(in_out_2[i][1], in_out_1[i][0])+1):
-            if in_out_2[i][1] != 0 and in_out_1[i][0] != 0 and in_out_2[i][0] != 0 and in_out_1[i][1] != 0:
-                new_in_out[j-1][i][0] = in_out_1[i][0] + in_out_2[i][0] - j
-                new_in_out[j-1][i][1] = in_out_1[i][1] + in_out_2[i][1] - j
-    return new_in_out
+    ranges = [range(min(in_out_1[i][0], in_out_2[i][1]) + 1) for i in range(len(in_out_1))]
+    new_in_out = []
+    for j in product(*ranges):
+        if sum(j) == 0:
+            continue
+        new_in_out.append(np.stack([in_out_1[:, 0] + in_out_2[:, 0] - np.array(j), in_out_1[:, 1] + in_out_2[:, 1] - np.array(j)], axis=1))
+    return np.array(new_in_out, dtype=int).reshape(-1, len(in_out_1), 2)
 
 def return_diagram_framewok(can_points1, can_paths1, can_points2, can_paths2, in_out1, in_out2):
     in_out1 = np.array(in_out1)
@@ -584,6 +493,8 @@ def return_diagram_framewok(can_points1, can_paths1, can_points2, can_paths2, in
                 in_out_array.append(aux[k])
     else:
         in_out_array = (new_in_out_array(in_out1, in_out2))
+    #Several ways of connecting can give the same numbers of lines, keep each possibility once
+    in_out_array = np.unique(np.array(in_out_array, dtype=int).reshape(-1, len(can_paths1), 2), axis=0)
     points = np.zeros((len(can_points1) + len(can_points2), 2))
     paths = np.zeros((len(can_paths1), len(can_paths1[0]) + len(can_paths2[0]), 2), dtype=int)
     points[:len(can_points1)] = can_points1

@@ -51,19 +51,40 @@ def find_equal_subarrays_3D(array, padding_value=0):
 
     return duplicate_positions
 
-def diagram_signature(paths: np.ndarray) -> tuple:
+def diagram_signature(points: np.ndarray, paths: np.ndarray) -> tuple:
     """
+    Signature that does not depend on how the points of a diagram are numbered, so that diagrams that only differ by
+    the numbering of their points (or by the y coordinates used for drawing) get the same signature.
+
+    Internal vertices are labelled by the rank of their x coordinate, which is their position in the product of
+    Hamiltonian terms. External points (the ones that appear in only one line) are labelled only by being
+    incoming (right end of a line) or outgoing (left end of a line). If two internal vertices share an x coordinate
+    their own index is kept, which can only stop equal diagrams from being grouped, never group different ones.
+
+    points: (P, 2)
     paths: (K, M, 2)
-    returns: a tuple of length K, where each element is
-             a flattened tuple of that row's points sorted lexicographically.
+    returns: sorted tuple of (type of particle, label of one end, label of the other end) for every line
     """
-    sig = []
-    for row in paths:
-        # sort points by (x, then y)
-        idx = np.lexsort((row[:,1], row[:,0]))
-        sorted_row = row[idx]
-        sig.append(tuple(sorted_row.ravel()))
-    return tuple(sig)
+    lines = [(k, int(a), int(b)) for k in range(len(paths)) for a, b in paths[k] if a != 0 or b != 0]
+    ends = [a for _, a, _ in lines] + [b for _, _, b in lines]
+    values, counts = np.unique(ends, return_counts=True)
+    external = set(values[counts == 1].tolist())
+
+    internal = sorted(set(ends) - external)
+    x_internal = [points[v-1, 0] for v in internal]
+    x_ranks = {x: rank for rank, x in enumerate(sorted(set(x_internal)))}
+    label = {}
+    for v, x in zip(internal, x_internal):
+        tied = x_internal.count(x) > 1
+        label[v] = (0, x_ranks[x], v if tied else 0)
+
+    def end_label(v, is_right_end):
+        if v in external:
+            return (1, 0 if is_right_end else 1, 0) # (1, 0, 0) incoming, (1, 1, 0) outgoing
+        return label[v]
+
+    sig = [(k,) + tuple(sorted((end_label(a, False), end_label(b, True)))) for k, a, b in lines]
+    return tuple(sorted(sig))
 
 #From Chatgpt
 def group_diagrams(points: np.ndarray,
@@ -80,6 +101,9 @@ def group_diagrams(points: np.ndarray,
     pths = paths  [nonzero_mask]
     nums = numbers[nonzero_mask, 0]
 
+    if len(pts) == 0:
+        return pts, pths, nums
+
     # 2) single-pass grouping via a dict
     sig2group = {}
     grouped_pts  = []
@@ -87,7 +111,7 @@ def group_diagrams(points: np.ndarray,
     counts       = []
 
     for idx, (pt, pth, num) in enumerate(zip(pts, pths, nums)):
-        sig = diagram_signature(pth)
+        sig = diagram_signature(pt, pth)
         if sig in sig2group:
             gi = sig2group[sig]
             counts[gi] += num

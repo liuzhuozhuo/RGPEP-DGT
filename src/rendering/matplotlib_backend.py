@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
-import feynman as fyn
 
 from src.transforms.format import *
 from src.search.comparison import find_equal_subarrays, find_equal_subarrays_3D
@@ -73,6 +72,8 @@ def represent_diagram_as_png_feynman (points, connection, symmetry_num, colors, 
     #points = trim_zeros_2D(points)
     #connection = trim_zeros_3D(connection, axis=1)
 
+    import feynman as fyn # Imported here so that the diagrams can be computed without having feynman installed
+
     #Initialize figure
     fig=plt.figure(figsize=figsize_) 
     ax=fig.add_subplot(111)
@@ -134,7 +135,7 @@ def represent_diagram_as_png_feynman (points, connection, symmetry_num, colors, 
     diagram.draw()
     plt.show()
 
-def represent_order_diagram(points, connection, symmetry_num, all_in_out, mode, order, process, colors_=['black', 'black', 'blue', 'red'], flavour=['loopy','simple', 'simple', 'simple'], linestyle = ["solid", "dotted", "solid", "solid"], directory_ = "", figsize=(4,3), arrow = [False, False, True, True]):
+def represent_order_diagram(points, connection, symmetry_num, all_in_out=None, mode="complete", order=1, process=None, colors_=['black', 'black', 'blue', 'red'], flavour=['loopy','simple', 'simple', 'simple'], linestyle = ["solid", "dotted", "solid", "solid"], directory_ = "", figsize=(4,3), arrow = [False, False, True, True]):
     if mode == "framework":
         if isinstance(process[0], int):
             process[0] = [process[0], 0]

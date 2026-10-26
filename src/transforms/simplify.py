@@ -35,7 +35,7 @@ def simplify_diagram_it (points, connections):
             elif pos[0, 2] == 1:
                 if pos[1, 2] == 0:
                     prov = np.array([connections[j, pos[0, 1], 0], connections[j, pos[1, 1], 1]])                  
-                elif pos[1, 1] == 1:
+                elif pos[1, 2] == 1:
                     prov = np.array([connections[j, pos[0, 1], 0], connections[j, pos[1, 1], 0]])
             connections[j, pos[1, 1]] = np.array([0, 0])
             connections[j, pos[0, 1]] = prov
